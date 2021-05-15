@@ -1,0 +1,567 @@
+'\" t
+.\"     Title: pacman.conf
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 2020-06-25
+.\"    Manual: Pacman Manual
+.\"    Source: Pacman 5.2.2
+.\"  Language: English
+.\"
+.TH "PACMAN\&.CONF" "5" "2020\-06\-25" "Pacman 5\&.2\&.2" "Pacman Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pacman.conf \- pacman package manager configuration file
+.SH "SYNOPSIS"
+.sp
+/etc/pacman\&.conf
+.SH "DESCRIPTION"
+.sp
+Pacman, using \fBlibalpm\fR(3), will attempt to read pacman\&.conf each time it is invoked\&. This configuration file is divided into sections or repositories\&. Each section defines a package repository that pacman can use when searching for packages in \fI\-\-sync\fR mode\&. The exception to this is the options section, which defines global options\&.
+.sp
+Comments are only supported by beginning a line with the hash (#) symbol\&. Comments cannot begin in the middle of a line\&.
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#
+# pacman\&.conf
+#
+[options]
+NoUpgrade = etc/passwd etc/group etc/shadow
+NoUpgrade = etc/fstab
+
+[core]
+Include = /etc/pacman\&.d/core
+
+[custom]
+Server = file:///home/pkgs
+.fi
+.if n \{\
+.RE
+.\}
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+Each directive must be in CamelCase\&. If the case isn\(cqt respected, the directive won\(cqt be recognized\&. For example\&. noupgrade or NOUPGRADE will not work\&.
+.sp .5v
+.RE
+.SH "OPTIONS"
+.PP
+\fBRootDir =\fR /path/to/root/dir
+.RS 4
+Set the default root directory for pacman to install to\&. This option is used if you want to install a package on a temporary mounted partition which is "owned" by another system, or for a chroot install\&.
+\fBNOTE\fR: If database path or log file are not specified on either the command line or in
+\fBpacman.conf\fR(5), their default location will be inside this root path\&.
+.RE
+.PP
+\fBDBPath =\fR /path/to/db/dir
+.RS 4
+Overrides the default location of the toplevel database directory\&. The default is
+/var/lib/pacman/\&. Most users will not need to set this option\&.
+\fBNOTE\fR: if specified, this is an absolute path and the root path is not automatically prepended\&.
+.RE
+.PP
+\fBCacheDir =\fR /path/to/cache/dir
+.RS 4
+Overrides the default location of the package cache directory\&. The default is
+/var/cache/pacman/pkg/\&. Multiple cache directories can be specified, and they are tried in the order they are listed in the config file\&. If a file is not found in any cache directory, it will be downloaded to the first cache directory with write access\&.
+\fBNOTE\fR: this is an absolute path, the root path is not automatically prepended\&.
+.RE
+.PP
+\fBHookDir =\fR /path/to/hook/dir
+.RS 4
+Add directories to search for alpm hooks in addition to the system hook directory (/usr/share/libalpm/hooks/)\&. The default is
+/etc/pacman\&.d/hooks\&. Multiple directories can be specified with hooks in later directories taking precedence over hooks in earlier directories\&.
+\fBNOTE\fR: this is an absolute path, the root path is not automatically prepended\&. For more information on the alpm hooks, see
+\fBalpm-hooks\fR(5)\&.
+.RE
+.PP
+\fBGPGDir =\fR /path/to/gpg/dir
+.RS 4
+Overrides the default location of the directory containing configuration files for GnuPG\&. The default is
+/etc/pacman\&.d/gnupg/\&. This directory should contain two files:
+pubring\&.gpg
+and
+trustdb\&.gpg\&.
+pubring\&.gpg
+holds the public keys of all packagers\&.
+trustdb\&.gpg
+contains a so\-called trust database, which specifies that the keys are authentic and trusted\&.
+\fBNOTE\fR: this is an absolute path, the root path is not automatically prepended\&.
+.RE
+.PP
+\fBLogFile =\fR /path/to/log/file
+.RS 4
+Overrides the default location of the pacman log file\&. The default is
+/var/log/pacman\&.log\&. This is an absolute path and the root directory is not prepended\&.
+.RE
+.PP
+\fBHoldPkg =\fR package \&...
+.RS 4
+If a user tries to
+\fI\-\-remove\fR
+a package that\(cqs listed in
+HoldPkg, pacman will ask for confirmation before proceeding\&. Shell\-style glob patterns are allowed\&.
+.RE
+.PP
+\fBIgnorePkg =\fR package \&...
+.RS 4
+Instructs pacman to ignore any upgrades for this package when performing a
+\fI\-\-sysupgrade\fR\&. Shell\-style glob patterns are allowed\&.
+.RE
+.PP
+\fBIgnoreGroup =\fR group \&...
+.RS 4
+Instructs pacman to ignore any upgrades for all packages in this group when performing a
+\fI\-\-sysupgrade\fR\&. Shell\-style glob patterns are allowed\&.
+.RE
+.PP
+\fBInclude =\fR /path/to/config/file
+.RS 4
+Include another configuration file\&. This file can include repositories or general configuration options\&. Wildcards in the specified paths will get expanded based on
+\fBglob\fR(7)
+rules\&.
+.RE
+.PP
+\fBArchitecture =\fR auto | i686 | x86_64 | \&...
+.RS 4
+If set, pacman will only allow installation of packages of the given architecture (e\&.g\&.
+\fIi686\fR,
+\fIx86_64\fR, etc)\&. The special value
+\fIauto\fR
+will use the system architecture, provided via \(lquname \-m\(rq\&. If unset, no architecture checks are made\&.
+\fBNOTE\fR: Packages with the special architecture
+\fIany\fR
+can always be installed, as they are meant to be architecture independent\&.
+.RE
+.PP
+\fBXferCommand =\fR /path/to/command %u
+.RS 4
+If set, an external program will be used to download all remote files\&. All instances of
+%u
+will be replaced with the download URL\&. If present, instances of
+%o
+will be replaced with the local filename, plus a \(lq\&.part\(rq extension, which allows programs like wget to do file resumes properly\&.
+
+This option is useful for users who experience problems with built\-in HTTP/FTP support, or need the more advanced proxy support that comes with utilities like wget\&.
+.RE
+.PP
+\fBNoUpgrade =\fR file \&...
+.RS 4
+All files listed with a
+NoUpgrade
+directive will never be touched during a package install/upgrade, and the new files will be installed with a
+\fI\&.pacnew\fR
+extension\&. These files refer to files in the package archive, so do not include the leading slash (the RootDir) when specifying them\&. Shell\-style glob patterns are allowed\&. It is possible to invert matches by prepending a file with an exclamation mark\&. Inverted files will result in previously blacklisted files being whitelisted again\&. Subsequent matches will override previous ones\&. A leading literal exclamation mark or backslash needs to be escaped\&.
+.RE
+.PP
+\fBNoExtract =\fR file \&...
+.RS 4
+All files listed with a
+NoExtract
+directive will never be extracted from a package into the filesystem\&. This can be useful when you don\(cqt want part of a package to be installed\&. For example, if your httpd root uses an
+\fIindex\&.php\fR, then you would not want the
+\fIindex\&.html\fR
+file to be extracted from the
+\fIapache\fR
+package\&. These files refer to files in the package archive, so do not include the leading slash (the RootDir) when specifying them\&. Shell\-style glob patterns are allowed\&. It is possible to invert matches by prepending a file with an exclamation mark\&. Inverted files will result in previously blacklisted files being whitelisted again\&. Subsequent matches will override previous ones\&. A leading literal exclamation mark or backslash needs to be escaped\&.
+.RE
+.PP
+\fBCleanMethod =\fR KeepInstalled &| KeepCurrent
+.RS 4
+If set to
+KeepInstalled
+(the default), the
+\fI\-Sc\fR
+operation will clean packages that are no longer installed (not present in the local database)\&. If set to
+KeepCurrent,
+\fI\-Sc\fR
+will clean outdated packages (not present in any sync database)\&. The second behavior is useful when the package cache is shared among multiple machines, where the local databases are usually different, but the sync databases in use could be the same\&. If both values are specified, packages are only cleaned if not installed locally and not present in any known sync database\&.
+.RE
+.PP
+\fBSigLevel =\fR \&...
+.RS 4
+Set the default signature verification level\&. For more information, see
+Package and Database Signature Checking
+below\&.
+.RE
+.PP
+\fBLocalFileSigLevel =\fR \&...
+.RS 4
+Set the signature verification level for installing packages using the "\-U" operation on a local file\&. Uses the value from SigLevel as the default\&.
+.RE
+.PP
+\fBRemoteFileSigLevel =\fR \&...
+.RS 4
+Set the signature verification level for installing packages using the "\-U" operation on a remote file URL\&. Uses the value from SigLevel as the default\&.
+.RE
+.PP
+\fBUseSyslog\fR
+.RS 4
+Log action messages through syslog()\&. This will insert log entries into
+/var/log/messages
+or equivalent\&.
+.RE
+.PP
+\fBColor\fR
+.RS 4
+Automatically enable colors only when pacman\(cqs output is on a tty\&.
+.RE
+.PP
+\fBTotalDownload\fR
+.RS 4
+When downloading, display the amount downloaded, download rate, ETA, and completed percentage of the entire download list rather than the percent of each individual download target\&. The progress bar is still based solely on the current file download\&. This option won\(cqt work if XferCommand is used\&.
+.RE
+.PP
+\fBCheckSpace\fR
+.RS 4
+Performs an approximate check for adequate available disk space before installing packages\&.
+.RE
+.PP
+\fBVerbosePkgLists\fR
+.RS 4
+Displays name, version and size of target packages formatted as a table for upgrade, sync and remove operations\&.
+.RE
+.PP
+\fBDisableDownloadTimeout\fR
+.RS 4
+Disable defaults for low speed limit and timeout on downloads\&. Use this if you have issues downloading files with proxy and/or security gateway\&.
+.RE
+.SH "REPOSITORY SECTIONS"
+.sp
+Each repository section defines a section name and at least one location where the packages can be found\&. The section name is defined by the string within square brackets (the two above are \fIcore\fR and \fIcustom\fR)\&. Repository names must be unique and the name \fIlocal\fR is reserved for the database of installed packages\&. Locations are defined with the \fIServer\fR directive and follow a URL naming structure\&. If you want to use a local directory, you can specify the full path with a \(lqfile://\(rq prefix, as shown above\&.
+.sp
+A common way to define DB locations utilizes the \fIInclude\fR directive\&. For each repository defined in the configuration file, a single \fIInclude\fR directive can contain a file that lists the servers for that repository\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[core]
+# use this server first
+Server = ftp://ftp\&.archlinux\&.org/$repo/os/$arch
+# next use servers as defined in the mirrorlist below
+Include = {sysconfdir}/pacman\&.d/mirrorlist
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The order of repositories in the configuration files matters; repositories listed first will take precedence over those listed later in the file when packages in two repositories have identical names, regardless of version number\&.
+.PP
+\fBInclude =\fR path
+.RS 4
+Include another config file\&. This file can include repositories or general configuration options\&. Wildcards in the specified paths will get expanded based on
+\fBglob\fR(7)
+rules\&.
+.RE
+.PP
+\fBServer =\fR url
+.RS 4
+A full URL to a location where the database, packages, and signatures (if available) for this repository can be found\&.
+.sp
+During parsing, pacman will define the
+$repo
+variable to the name of the current section\&. This is often utilized in files specified using the
+\fIInclude\fR
+directive so all repositories can use the same mirrorfile\&. pacman also defines the
+$arch
+variable to the value of
+Architecture, so the same mirrorfile can even be used for different architectures\&.
+.RE
+.PP
+\fBSigLevel =\fR \&...
+.RS 4
+Set the signature verification level for this repository\&. For more information, see
+Package and Database Signature Checking
+below\&.
+.RE
+.PP
+\fBUsage =\fR \&...
+.RS 4
+Set the usage level for this repository\&. This option takes a list of tokens which must be at least one of the following:
+.PP
+\fBSync\fR
+.RS 4
+Enables refreshes for this repository\&.
+.RE
+.PP
+\fBSearch\fR
+.RS 4
+Enables searching for this repository\&.
+.RE
+.PP
+\fBInstall\fR
+.RS 4
+Enables installation of packages from this repository during a
+\fI\-\-sync\fR
+operation\&.
+.RE
+.PP
+\fBUpgrade\fR
+.RS 4
+Allows this repository to be a valid source of packages when performing a
+\fI\-\-sysupgrade\fR\&.
+.RE
+.PP
+\fBAll\fR
+.RS 4
+Enables all of the above features for the repository\&. This is the default if not specified\&.
+.sp
+Note that an enabled repository can be operated on explicitly, regardless of the Usage level set\&.
+.RE
+.RE
+.SH "PACKAGE AND DATABASE SIGNATURE CHECKING"
+.sp
+The \fISigLevel\fR directive is valid in both the [options] and repository sections\&. If used in [options], it sets a default value for any repository that does not provide the setting\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If set to
+\fBNever\fR, no signature checking will take place\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If set to
+\fBOptional\fR
+, signatures will be checked when present, but unsigned databases and packages will also be accepted\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If set to
+\fBRequired\fR, signatures will be required on all packages and databases\&.
+.RE
+.sp
+Alternatively, you can get more fine\-grained control by combining some of the options and prefixes described below\&. All options in a config file are processed in top\-to\-bottom, left\-to\-right fashion, where later options override and/or supplement earlier ones\&. If \fISigLevel\fR is specified in a repository section, the starting value is that from the [options] section, or the built\-in system default as shown below if not specified\&.
+.sp
+The options are split into two main groups, described below\&. Terms used such as \(lqmarginally trusted\(rq are terms used by GnuPG, for more information please consult \fBgpg\fR(1)\&.
+.PP
+When to Check
+.RS 4
+These options control if and when signature checks should take place\&.
+.PP
+\fBNever\fR
+.RS 4
+All signature checking is suppressed, even if signatures are present\&.
+.RE
+.PP
+\fBOptional\fR (default)
+.RS 4
+Signatures are checked if present; absence of a signature is not an error\&. An invalid signature is a fatal error, as is a signature from a key not in the keyring\&.
+.RE
+.PP
+\fBRequired\fR
+.RS 4
+Signatures are required; absence of a signature or an invalid signature is a fatal error, as is a signature from a key not in the keyring\&.
+.RE
+.RE
+.PP
+What is Allowed
+.RS 4
+These options control what signatures are viewed as permissible\&. Note that neither of these options allows acceptance of invalid or expired signatures, or those from revoked keys\&.
+.PP
+\fBTrustedOnly\fR (default)
+.RS 4
+If a signature is checked, it must be in the keyring and fully trusted; marginal trust does not meet this criteria\&.
+.RE
+.PP
+\fBTrustAll\fR
+.RS 4
+If a signature is checked, it must be in the keyring, but is not required to be assigned a trust level (e\&.g\&., unknown or marginal trust)\&.
+.RE
+.RE
+.sp
+Options in both groups can additionally be prefixed with either \fBPackage\fR or \fBDatabase\fR, which will cause it to only take effect on the specified object type\&. For example, PackageTrustAll would allow marginal and unknown trust level signatures for packages\&.
+.sp
+The built\-in default is the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+SigLevel = Optional TrustedOnly
+.fi
+.if n \{\
+.RE
+.\}
+.SH "USING YOUR OWN REPOSITORY"
+.sp
+If you have numerous custom packages of your own, it is often easier to generate your own custom local repository than install them all with the \fI\-\-upgrade\fR option\&. All you need to do is generate a compressed package database in the directory with these packages so pacman can find it when run with \fI\-\-refresh\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+repo\-add /home/pkgs/custom\&.db\&.tar\&.gz /home/pkgs/*\&.pkg\&.tar\&.gz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The above command will generate a compressed database named \fI/home/pkgs/custom\&.db\&.tar\&.gz\fR\&. Note that the database must be of the form defined in the configuration file and \fI{ext}\fR is a valid compression type as documented in \fBrepo-add\fR(8)\&. That\(cqs it! Now configure your custom section in the configuration file as shown in the config example above\&. Pacman will now use your package repository\&. If you add new packages to the repository, remember to re\-generate the database and use pacman\(cqs \fI\-\-refresh\fR option\&.
+.sp
+For more information on the repo\-add command, see \(lqrepo\-add \-\-help\(rq or \fBrepo-add\fR(8)\&.
+.SH "SEE ALSO"
+.sp
+\fBpacman\fR(8), \fBlibalpm\fR(3)
+.sp
+See the pacman website at https://www\&.archlinux\&.org/pacman/ for current information on pacman and its related tools\&.
+.SH "BUGS"
+.sp
+Bugs? You must be kidding; there are no bugs in this software\&. But if we happen to be wrong, submit a bug report with as much detail as possible at the Arch Linux Bug Tracker in the Pacman section\&.
+.SH "AUTHORS"
+.sp
+Current maintainers:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allan McRae <allan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Andrew Gregory <andrew\&.gregory\&.8@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dan McGee <dan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dave Reisner <dreisner@archlinux\&.org>
+.RE
+.sp
+Past major contributors:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Judd Vinet <jvinet@zeroflux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aurelien Foret <aurelien@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aaron Griffin <aaron@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Xavier Chantry <shiningxc@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Nagy Gabor <ngaba@bibl\&.u\-szeged\&.hu>
+.RE
+.sp
+For additional contributors, use git shortlog \-s on the pacman\&.git repository\&.

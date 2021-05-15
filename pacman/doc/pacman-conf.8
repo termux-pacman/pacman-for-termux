@@ -1,0 +1,203 @@
+'\" t
+.\"     Title: pacman-conf
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 2020-06-25
+.\"    Manual: Pacman Manual
+.\"    Source: Pacman 5.2.2
+.\"  Language: English
+.\"
+.TH "PACMAN\-CONF" "8" "2020\-06\-25" "Pacman 5\&.2\&.2" "Pacman Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pacman-conf \- query pacman\*(Aqs configuration file
+.SH "SYNOPSIS"
+.sp
+\fIpacman\-conf\fR [options] [<directive> \&...]
+.sp
+\fIpacman\-conf\fR (\-\-repo\-list|\-\-help|\-\-version)
+.SH "DESCRIPTION"
+.sp
+\fIpacman\-conf\fR is a utility for parsing the \fIpacman\fR configuration file and returning script\-friendly output\&. It is designed to properly handle non\-trivial configuration features such as variable interpolation and the use of the Include directive, and guarantees that it will return the same configuration values which \fIpacman\fR itself would use\&.
+.sp
+\fIpacman\-conf\fR will output the fully\-resolved contents of the configuration file by default, or, if provided with the name of a configuration directive, output the contents of the given directive alone\&.
+.SH "OPTIONS"
+.PP
+\fB\-c, \-\-config\fR <path>
+.RS 4
+Specify an alternate configuration file\&.
+.RE
+.PP
+\fB\-R, \-\-rootdir\fR <path>
+.RS 4
+Specify an alternate installation root (default is
+/)\&.
+.RE
+.PP
+\fB\-r, \-\-repo\fR <remote>
+.RS 4
+Query options for a specific repository\&.
+.RE
+.PP
+\fB\-v, \-\-verbose\fR
+.RS 4
+Always shown directive names\&.
+.RE
+.PP
+\fB\-l, \-\-repo\-list\fR
+.RS 4
+List configured repositories\&.
+.RE
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+Output syntax and command line options\&.
+.RE
+.PP
+\fB\-V, \-\-version\fR
+.RS 4
+Display version and exit\&.
+.RE
+.SH "EXAMPLES"
+.PP
+pacman\-conf \-r core Usage
+.RS 4
+Show the value of the Usage configuration option for core repository\&.
+.RE
+.PP
+pacman\-conf HoldPkg
+.RS 4
+Show the value of the HoldPkg configuration option\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBpacman.conf\fR(5)
+.sp
+See the pacman website at https://www\&.archlinux\&.org/pacman/ for current information on pacman and its related tools\&.
+.SH "BUGS"
+.sp
+Bugs? You must be kidding; there are no bugs in this software\&. But if we happen to be wrong, submit a bug report with as much detail as possible at the Arch Linux Bug Tracker in the Pacman section\&.
+.SH "AUTHORS"
+.sp
+Current maintainers:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allan McRae <allan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Andrew Gregory <andrew\&.gregory\&.8@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dan McGee <dan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dave Reisner <dreisner@archlinux\&.org>
+.RE
+.sp
+Past major contributors:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Judd Vinet <jvinet@zeroflux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aurelien Foret <aurelien@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aaron Griffin <aaron@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Xavier Chantry <shiningxc@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Nagy Gabor <ngaba@bibl\&.u\-szeged\&.hu>
+.RE
+.sp
+For additional contributors, use git shortlog \-s on the pacman\&.git repository\&.

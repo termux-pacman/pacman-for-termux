@@ -1,0 +1,193 @@
+'\" t
+.\"     Title: libalpm
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 2020-06-25
+.\"    Manual: Pacman Manual
+.\"    Source: Pacman 5.2.2
+.\"  Language: English
+.\"
+.TH "LIBALPM" "3" "2020\-06\-25" "Pacman 5\&.2\&.2" "Pacman Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+libalpm \- Arch Linux Package Management (ALPM) library
+.SH "SYNOPSIS"
+.sp
+For ease of access, the libalpm manual has been split up into several sections\&.
+.sp
+\fBTODO:\fR Yes, this man page needs a lot of work\&. Once we get around to doing good Doxygen documentation, it will improve\&. We promise\&.
+.PP
+\fBalpm_databases\fR
+.RS 4
+Database Functions
+.RE
+.PP
+\fBalpm_interface\fR
+.RS 4
+Interface Functions
+.RE
+.PP
+\fBalpm_list\fR
+.RS 4
+List Functions
+.RE
+.PP
+\fBalpm_log\fR
+.RS 4
+Logging Functions
+.RE
+.PP
+\fBalpm_misc\fR
+.RS 4
+Miscellaneous Functions
+.RE
+.PP
+\fBalpm_packages\fR
+.RS 4
+Package Functions
+.RE
+.PP
+\fBalpm_sync\fR
+.RS 4
+Sync Functions
+.RE
+.PP
+\fBalpm_trans\fR
+.RS 4
+Transaction Functions
+.RE
+.SH "CONFIGURATION"
+.sp
+See \fBpacman.conf\fR(5) for more details on configuring libalpm using the \fIpacman\&.conf\fR file\&.
+.SH "SEE ALSO"
+.sp
+\fBalpm-hooks\fR(5), \fBmakepkg\fR(8), \fBpacman\fR(8), \fBpacman.conf\fR(5)
+.sp
+See the pacman website at https://www\&.archlinux\&.org/pacman/ for current information on pacman and its related tools\&.
+.SH "BUGS"
+.sp
+Bugs? You must be kidding; there are no bugs in this software\&. But if we happen to be wrong, submit a bug report with as much detail as possible at the Arch Linux Bug Tracker in the Pacman section\&.
+.SH "AUTHORS"
+.sp
+Current maintainers:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allan McRae <allan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Andrew Gregory <andrew\&.gregory\&.8@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dan McGee <dan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dave Reisner <dreisner@archlinux\&.org>
+.RE
+.sp
+Past major contributors:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Judd Vinet <jvinet@zeroflux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aurelien Foret <aurelien@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aaron Griffin <aaron@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Xavier Chantry <shiningxc@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Nagy Gabor <ngaba@bibl\&.u\-szeged\&.hu>
+.RE
+.sp
+For additional contributors, use git shortlog \-s on the pacman\&.git repository\&.

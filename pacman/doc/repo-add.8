@@ -1,0 +1,209 @@
+'\" t
+.\"     Title: repo-add
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 2020-06-25
+.\"    Manual: Pacman Manual
+.\"    Source: Pacman 5.2.2
+.\"  Language: English
+.\"
+.TH "REPO\-ADD" "8" "2020\-06\-25" "Pacman 5\&.2\&.2" "Pacman Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+repo-add \- package database maintenance utility
+.SH "SYNOPSIS"
+.sp
+\fIrepo\-add\fR [options] <path\-to\-db> <package> [<package> \&...]
+.sp
+\fIrepo\-remove\fR [options] <path\-to\-db> <packagename> [<packagename> \&...]
+.SH "DESCRIPTION"
+.sp
+\fIrepo\-add\fR and \fIrepo\-remove\fR are two scripts to help build a package database for packages built with \fBmakepkg\fR(8) and installed with \fBpacman\fR(8)\&.
+.sp
+\fIrepo\-add\fR will update a package database by reading a built package file\&. Multiple packages to add can be specified on the command line\&.
+.sp
+If a matching \(lq\&.sig\(rq file is found alongside a package file, the signature will automatically be embedded into the database\&.
+.sp
+\fIrepo\-remove\fR will update a package database by removing the package name specified on the command line\&. Multiple packages to remove can be specified on the command line\&.
+.sp
+A package database is a tar file, optionally compressed\&. Valid extensions are \(lq\&.db\(rq followed by an archive extension of \(lq\&.tar\(rq, \(lq\&.tar\&.gz\(rq, \(lq\&.tar\&.bz2\(rq, \(lq\&.tar\&.xz\(rq, or \(lq\&.tar\&.Z\(rq\&. The file does not need to exist, but all parent directories must exist\&.
+.SH "COMMON OPTIONS"
+.PP
+\fB\-q, \-\-quiet\fR
+.RS 4
+Force this program to keep quiet and run silently except for warning and error messages\&.
+.RE
+.PP
+\fB\-s, \-\-sign\fR
+.RS 4
+Generate a PGP signature file using GnuPG\&. This will execute
+gpg \-\-detach\-sign \-\-use\-agent
+on the generated database to generate a detached signature file, using the GPG agent if it is available\&. The signature file will be the entire filename of the database with a \(lq\&.sig\(rq extension\&.
+.RE
+.PP
+\fB\-k, \-\-key\fR <key>
+.RS 4
+Specify a key to use when signing packages\&. Can also be specified using the GPGKEY environmental variable\&. If not specified in either location, the default key from the keyring will be used\&.
+.RE
+.PP
+\fB\-v, \-\-verify\fR
+.RS 4
+Verify the PGP signature of the database before updating the database\&. If the signature is invalid, an error is produced and the update does not proceed\&.
+.RE
+.PP
+\fB\-\-nocolor\fR
+.RS 4
+Remove color from
+\fIrepo\-add\fR
+and
+\fIrepo\-remove\fR
+output\&.
+.RE
+.SH "REPO\-ADD OPTIONS"
+.PP
+\fB\-n, \-\-new\fR
+.RS 4
+Only add packages that are not already in the database\&. Warnings will be printed upon detection of existing packages, but they will not be re\-added\&.
+.RE
+.PP
+\fB\-R, \-\-remove\fR
+.RS 4
+Remove old package files from the disk when updating their entry in the database\&.
+.RE
+.SH "EXAMPLE"
+.sp
+\fIrepo\-add\fR foo\&.db\&.tar\&.xz <pkg1> [<pkg2> \&...]
+.sp
+This creates two separate databases; a smaller database \(lqfoo\&.db\&.tar\&.xz\(rq used by pacman and a large database containing package file lists \(lqfoo\&.files\&.tar\&.xz\(rq for use by other utilities\&. While pacman can use the large database (if renamed with a db\&.tar* extension), there is currently no additional benefit for the larger download\&.
+.SH "SEE ALSO"
+.sp
+\fBmakepkg\fR(8), \fBpacman\fR(8)
+.sp
+See the pacman website at https://www\&.archlinux\&.org/pacman/ for current information on pacman and its related tools\&.
+.SH "BUGS"
+.sp
+Bugs? You must be kidding; there are no bugs in this software\&. But if we happen to be wrong, submit a bug report with as much detail as possible at the Arch Linux Bug Tracker in the Pacman section\&.
+.SH "AUTHORS"
+.sp
+Current maintainers:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allan McRae <allan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Andrew Gregory <andrew\&.gregory\&.8@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dan McGee <dan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dave Reisner <dreisner@archlinux\&.org>
+.RE
+.sp
+Past major contributors:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Judd Vinet <jvinet@zeroflux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aurelien Foret <aurelien@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aaron Griffin <aaron@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Xavier Chantry <shiningxc@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Nagy Gabor <ngaba@bibl\&.u\-szeged\&.hu>
+.RE
+.sp
+For additional contributors, use git shortlog \-s on the pacman\&.git repository\&.

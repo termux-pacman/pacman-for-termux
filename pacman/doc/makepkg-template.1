@@ -1,0 +1,306 @@
+'\" t
+.\"     Title: makepkg-template
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 2020-06-25
+.\"    Manual: Pacman Manual
+.\"    Source: Pacman 5.2.2
+.\"  Language: English
+.\"
+.TH "MAKEPKG\-TEMPLATE" "1" "2020\-06\-25" "Pacman 5\&.2\&.2" "Pacman Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+makepkg-template \- package build templating utility
+.SH "SYNOPSIS"
+.sp
+\fImakepkg\-template\fR [options]
+.SH "DESCRIPTION"
+.sp
+\fImakepkg\-template\fR is a script to ease the work of maintaining multiple similar PKGBUILDs\&. It allows you to move most of the code from the PKGBUILD into a template file and uses markers to allow in\-place updating of existing PKGBUILDs if the template has been changed\&.
+.sp
+Template files can contain any code allowed in a PKGBUILD\&. You can think of them like external files included with "\&." or "source", but they will be inlined into the PKGBUILD by \fImakepkg\-template\fR so you do not depend on the template file when building the package\&.
+.sp
+Markers are bash comments in the form of:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# template start; key=value; key2=value2; \&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# template end;
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Currently used keys are: name (mandatory) and version\&. Template names are limited to alphanumerics, "@", "+", "\&.", "\-", and "_"\&. Versions are limited to numbers and "\&."\&.
+.sp
+For initial creation there is a one line short cut which does not need an end marker:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# template input; key=value;
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Using this short\-cut will result in \fImakepkg\-template\fR replacing it with start and end markers and the template code on the first run\&.
+.sp
+Template files should be stored in one directory and filenames should be "$template_name\-$version\&.template" with a symlink "$template_name\&.template" pointing to the most recent template\&. If the version is not set in the marker, \fImakepkg\-template\fR will automatically use the target of "$template_name\&.template", otherwise the specified version will be used\&. This allows for easier verification of untrusted PKGBUILDs if the template is trusted\&. You verify the non\-template code and then use a command similar to this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+diff \-u <(makepkg\-template \-o \-) PKGBUILD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Template files may also contain markers leading to nested templates in the resulting PKGBUILD\&. If you use markers in a template, please set the version you used/tested with in the start/input marker so other people can properly recreate from templates\&.
+.SH "OPTIONS"
+.PP
+\fB\-p, \-\-input\fR <build script>
+.RS 4
+Read the package script
+build script
+instead of the default\&.
+.RE
+.PP
+\fB\-o, \-\-output\fR <build script>
+.RS 4
+Write the updated file to
+build script
+instead of overwriting the input file\&.
+.RE
+.PP
+\fB\-n, \-\-newest\fR
+.RS 4
+Always use the newest available template file\&.
+.RE
+.PP
+\fB\-\-template\-dir\fR <dir>
+.RS 4
+Change the dir where we are looking for template files\&. This option may be given multiple times in which case files found in directory given last will take precedence\&.
+.RE
+.SH "EXAMPLE PKGBUILD"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pkgname=perl\-config\-simple
+pkgver=4\&.58
+pkgrel=1
+pkgdesc="simple configuration file class"
+arch=(\*(Aqany\*(Aq)
+license=(\*(AqPerlArtistic\*(Aq \*(AqGPL\*(Aq)
+depends=(\*(Aqperl\*(Aq)
+source=("http://search\&.cpan\&.org/CPAN/authors/id/S/SH/SHERZODR/Config\-Simple\-${pkgver}\&.tar\&.gz")
+md5sums=(\*(Aqf014aec54f0a1e2e880d317180fce502\*(Aq)
+_distname="Config\-Simple"
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# template start; name=perl\-module; version=1\&.0;
+_distdir="${_distname}\-${pkgver}"
+url="https://metacpan\&.org/release/${_distname}"
+options+=(\*(Aq!emptydirs\*(Aq)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+build() {
+        cd "$srcdir/$_distdir"
+        perl Makefile\&.PL INSTALLDIRS=vendor
+        make
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+check() {
+        cd "$srcdir/$_distdir"
+        make test
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+package() {
+        cd "$srcdir/$_distdir"
+        make DESTDIR="$pkgdir" install
+}
+# template end;
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBmakepkg\fR(8), \fBPKGBUILD\fR(5)
+.sp
+See the pacman website at https://www\&.archlinux\&.org/pacman/ for current information on pacman and its related tools\&.
+.SH "BUGS"
+.sp
+Bugs? You must be kidding; there are no bugs in this software\&. But if we happen to be wrong, submit a bug report with as much detail as possible at the Arch Linux Bug Tracker in the Pacman section\&.
+.SH "AUTHORS"
+.sp
+Current maintainers:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allan McRae <allan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Andrew Gregory <andrew\&.gregory\&.8@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dan McGee <dan@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Dave Reisner <dreisner@archlinux\&.org>
+.RE
+.sp
+Past major contributors:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Judd Vinet <jvinet@zeroflux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aurelien Foret <aurelien@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Aaron Griffin <aaron@archlinux\&.org>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Xavier Chantry <shiningxc@gmail\&.com>
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Nagy Gabor <ngaba@bibl\&.u\-szeged\&.hu>
+.RE
+.sp
+For additional contributors, use git shortlog \-s on the pacman\&.git repository\&.

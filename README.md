@@ -1,0 +1,1 @@
+# pacman-for-termux

@@ -1231,9 +1231,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Log command line */
-	if(needs_root()) {
-		cl_to_log(argc, argv);
-	}
+	//if(needs_root()) {
+	cl_to_log(argc, argv);
+	//}
 
 	/* start the requested operation */
 	switch(config->op) {

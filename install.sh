@@ -18,7 +18,7 @@ pkg update -y
 pkg upgrade -y
 
 info 'Installing packages.'
-pkg install build-essential asciidoc gpgme nettle -y
+pkg install build-essential asciidoc gpgme nettle wget -y
 
 info 'Directory creation.'
 for i in var/cache/ etc/pacman.d/

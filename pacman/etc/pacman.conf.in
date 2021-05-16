@@ -9,7 +9,7 @@
 [options]
 # The following paths are commented out with their default values listed.
 # If you wish to use different paths, uncomment and update the paths.
-RootDir     = @localstatedir@
+RootDir     = /data/data/com.termux/files/usr/
 DBPath      = @localstatedir@/lib/pacman/
 CacheDir    = @localstatedir@/cache/pacman/pkg/
 LogFile     = @localstatedir@/log/pacman.log
@@ -68,20 +68,20 @@ LocalFileSigLevel = Optional
 # repo name header and Include lines. You can add preferred servers immediately
 # after the header, and they will be used before the default mirrors.
 
-[core]
-Include = @sysconfdir@/pacman.d/mirrorlist
+#this[core]
+#thisInclude = @sysconfdir@/pacman.d/mirrorlist
 
-[extra]
-Include = @sysconfdir@/pacman.d/mirrorlist
+#this[extra]
+#thisInclude = @sysconfdir@/pacman.d/mirrorlist
 
-[community]
-Include = @sysconfdir@/pacman.d/mirrorlist
+#this[community]
+#thisInclude = @sysconfdir@/pacman.d/mirrorlist
 
-[alarm]
-Include = @sysconfdir@/pacman.d/mirrorlist
+#this[alarm]
+#thisInclude = @sysconfdir@/pacman.d/mirrorlist
 
-[aur]
-Include = @sysconfdir@/pacman.d/mirrorlist
+#this[aur]
+#thisInclude = @sysconfdir@/pacman.d/mirrorlist
 
 # An example of a custom package repository.  See the pacman manpage for
 # tips on creating your own repositories.

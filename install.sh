@@ -42,4 +42,15 @@ cd pacman
 make
 make install
 
+info 'Pacman settings.'
+if [[ ! -d /data/data/com.termux/files/usr/usr ]]; then
+	ln -s /data/data/com.termux/files/usr /data/data/com.termux/files/usr
+fi
+wget http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+#wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
+#pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
+pacman-key --init
+#pacman-key --populate archlinuxarm
+
 info 'Done.'

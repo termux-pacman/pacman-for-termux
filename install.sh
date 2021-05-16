@@ -51,6 +51,7 @@ pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
 rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
 mv /data/data/com.termux/files/usr/usr/share/pacman/* /data/data/com.termux/files/usr/share/pacman
 rm -fr /data/data/com.termux/files/usr/usr
+sed -i 's/#this//' /data/data/com.termux/files/usr/etc/pacman.conf
 pacman-key --init
 pacman-key --populate archlinuxarm
 

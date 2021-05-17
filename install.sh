@@ -18,7 +18,7 @@ pkg update -y
 pkg upgrade -y
 
 info 'Installing packages.'
-pkg install build-essential asciidoc gpgme nettle wget -y
+pkg install build-essential asciidoc gpgme nettle wget curl -y
 
 info 'Directory creation.'
 for i in usr/var/cache/ sbin

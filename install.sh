@@ -48,7 +48,7 @@ if [[ ! -d pacman ]]; then
 	exit 2
 fi
 cd pacman
-./configure --prefix=$PREFIX
+./configure --prefix=/data/data/com.termux/files
 make
 make install
 

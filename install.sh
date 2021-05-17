@@ -21,16 +21,13 @@ info 'Installing packages.'
 pkg install build-essential asciidoc gpgme nettle wget curl -y
 
 info 'Directory creation.'
-for i in var/cache/ sbin usr
-do
-	dir="$PREFIX/$i"
-	if [[ -d $dir ]]; then
-		commet "Found: $dir"
-	else
-		mkdir $dir
-		commet "Create: $dir"
-	fi
-done
+dir=$PREFIX/var/cache/
+if [[ -d $dir ]]; then
+	commet "Found: $dir"
+else
+	mkdir $dir
+	commet "Create: $dir"
+fi
 
 info 'Installing pacman.'
 if [[ ! -d pacman ]]; then
@@ -53,5 +50,15 @@ mv $PREFIX/usr/share/pacman/* $PREFIX/share/pacman
 sed -i 's/#this//' $PREFIX/etc/pacman.conf
 pacman-key --init
 pacman-key --populate archlinuxarm
+pacman -Syu
+#rm $PREFIX/etc/bindresvport.blacklist
+#rm $PREFIX/etc/profile.d/gawk.sh
+dir=$PREFIX/lib
+for i in $(ls $dir)
+do
+	if [[ -d $dir/$i ]]; then
+		rm -fr $dir/$i
+	fi
+done
 
 info 'Done.'

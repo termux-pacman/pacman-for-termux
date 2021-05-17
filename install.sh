@@ -46,9 +46,10 @@ info 'Pacman settings.'
 wget http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
 pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
 rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-#wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
-pacman -U archlinuxarm-keyring-20140119-1-termux.pkg.tar.xz --noconfirm
-#rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
+wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
+pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz --noconfirm
+rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
+mv $PREFIX/usr/share/pacman/* $PREFIX/share/pacman
 sed -i 's/#this//' $PREFIX/etc/pacman.conf
 pacman-key --init
 pacman-key --populate archlinuxarm

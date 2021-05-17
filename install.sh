@@ -21,21 +21,31 @@ info 'Installing packages.'
 pkg install build-essential asciidoc gpgme nettle wget -y
 
 info 'Directory creation.'
-for i in var/cache/ etc/pacman.d/
+for i in usr/var/cache/ sbin
 do
-	dir="/data/data/com.termux/files/usr/$i"
+	dir="/data/data/com.termux/files/$i"
 	if [[ -d $dir ]]; then
-		commet "Found: $dir."
+		commet "Found: $dir"
 	else
 		mkdir $dir
-		commet "Create: $dir."
+		commet "Create: $dir"
+	fi
+done
+for i in bin etc lib tmp var
+do
+	dir="/data/data/com.termux/files/$i"
+	if [[  -d $dir ]]; then
+		commet "Found: $dir"
+	else
+		ln -ds /data/data/com.termux/files/usr/$i $dir
+		commet "Create: $dir"
 	fi
 done
 
 info 'Installing pacman.'
 if [[ ! -d pacman ]]; then
 	error 'Not found: pacman.'
-	exit e
+	exit 2
 fi
 cd pacman
 ./configure --prefix=$PREFIX

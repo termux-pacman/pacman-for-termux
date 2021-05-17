@@ -21,9 +21,9 @@ info 'Installing packages.'
 pkg install build-essential asciidoc gpgme nettle wget curl -y
 
 info 'Directory creation.'
-for i in usr/var/cache/ sbin bin etc lib tmp var
+for i in var/cache/ sbin usr
 do
-	dir="/data/data/com.termux/files/$i"
+	dir="$PREFIX/$i"
 	if [[ -d $dir ]]; then
 		commet "Found: $dir"
 	else
@@ -31,16 +31,6 @@ do
 		commet "Create: $dir"
 	fi
 done
-#for i in bin etc lib tmp var
-#do
-#	dir="/data/data/com.termux/files/$i"
-#	if [[  -d $dir ]]; then
-#		commet "Found: $dir"
-#	else
-#		ln -ds /data/data/com.termux/files/usr/$i $dir
-#		commet "Create: $dir"
-#	fi
-#done
 
 info 'Installing pacman.'
 if [[ ! -d pacman ]]; then
@@ -48,7 +38,7 @@ if [[ ! -d pacman ]]; then
 	exit 2
 fi
 cd pacman
-./configure --prefix=/data/data/com.termux/files
+./configure --prefix=$PREFIX
 make
 make install
 
@@ -59,7 +49,7 @@ rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
 wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
 pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz --noconfirm
 rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
-sed -i 's/#this//' /data/data/com.termux/files/usr/etc/pacman.conf
+sed -i 's/#this//' $PREFIX/etc/pacman.conf
 pacman-key --init
 pacman-key --populate archlinuxarm
 

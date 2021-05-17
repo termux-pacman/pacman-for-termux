@@ -9,7 +9,7 @@
 [options]
 # The following paths are commented out with their default values listed.
 # If you wish to use different paths, uncomment and update the paths.
-RootDir     = /data/data/com.termux/files/usr/
+RootDir     = /data/data/com.termux/files/
 DBPath      = @localstatedir@/lib/pacman/
 CacheDir    = @localstatedir@/cache/pacman/pkg/
 LogFile     = @localstatedir@/log/pacman.log

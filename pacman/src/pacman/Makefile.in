@@ -157,11 +157,11 @@ am__depfiles_remade = ./$(DEPDIR)/callback.Po ./$(DEPDIR)/check.Po \
 	./$(DEPDIR)/util-common.Po ./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -landroid-glob
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS) -landroid-glob
+	$(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
@@ -560,11 +560,11 @@ clean-binPROGRAMS:
 
 pacman$(EXEEXT): $(pacman_OBJECTS) $(pacman_DEPENDENCIES) $(EXTRA_pacman_DEPENDENCIES) 
 	@rm -f pacman$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(pacman_OBJECTS) $(pacman_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(pacman_OBJECTS) $(pacman_LDADD) $(LIBS) -landroid-glob
 
 pacman-conf$(EXEEXT): $(pacman_conf_OBJECTS) $(pacman_conf_DEPENDENCIES) $(EXTRA_pacman_conf_DEPENDENCIES) 
 	@rm -f pacman-conf$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(pacman_conf_OBJECTS) $(pacman_conf_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(pacman_conf_OBJECTS) $(pacman_conf_LDADD) $(LIBS) -landroid-glob
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

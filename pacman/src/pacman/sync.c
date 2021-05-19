@@ -816,7 +816,7 @@ int sync_prepare_execute(void)
 		goto cleanup;
 	}
 
-	if(alpm_trans_commit(config->handle, &data) == -1) {
+	/*if(alpm_trans_commit(config->handle, &data) == -1) {
 		alpm_errno_t err = alpm_errno(config->handle);
 		pm_printf(ALPM_LOG_ERROR, _("failed to commit transaction (%s)\n"),
 		        alpm_strerror(err));
@@ -858,7 +858,7 @@ int sync_prepare_execute(void)
 		printf(_("Errors occurred, no packages were upgraded.\n"));
 		retval = 1;
 		goto cleanup;
-	}
+	}*/
 
 	/* Step 4: release transaction resources */
 cleanup:

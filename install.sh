@@ -38,6 +38,7 @@ cd pacman
 ./configure --prefix=$PREFIX
 make
 make install
+cd ..
 
 info 'Pacman settings.'
 wget http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz

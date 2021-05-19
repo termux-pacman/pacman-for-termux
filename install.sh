@@ -13,6 +13,8 @@ error(){
 echo -e "\033[1;31m# $1\033[0m"
 }
 
+set -e
+
 info 'System and package updates.'
 pkg update -y
 pkg upgrade -y

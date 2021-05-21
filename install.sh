@@ -59,7 +59,7 @@ make install
 cd ..
 
 info 'Pacman settings.'
-wget http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
 pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
 rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
 sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf

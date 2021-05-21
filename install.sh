@@ -41,11 +41,11 @@ install_pacman(){
   fi
   cd pacman
   if [[ -z $1 || "$1" == "config" ]]; then
-    commet 'run the configure script.'
+    commet 'Run the configure script.'
     ./configure --prefix=$PREFIX
   fi
   if [[ -z $1 || "$1" == "make" ]]; then
-    commet 'run make.'
+    commet 'Run make.'
     set +e
     while :
     do
@@ -65,7 +65,7 @@ install_pacman(){
     set -e
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
-    commet 'run make install.'
+    commet 'Run make install.'
     make install
   fi
   cd ..

@@ -834,7 +834,6 @@ static int setup_libalpm(void)
 	alpm_option_set_usesyslog(handle, config->usesyslog);
 
 	alpm_option_set_ignorepkgs(handle, config->ignorepkg);
-	alpm_option_set_ignoregroups(handle, config->ignoregrp);
 	alpm_option_set_noupgrades(handle, config->noupgrade);
 	alpm_option_set_noextracts(handle, config->noextract);
 

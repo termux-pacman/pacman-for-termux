@@ -82,7 +82,6 @@ void enable_colors(int colors)
 		colstr->title   = "";
 		colstr->repo    = "";
 		colstr->version = "";
-		colstr->groups  = "";
 		colstr->meta    = "";
 		colstr->warn    = "";
 		colstr->err     = "";
@@ -115,7 +114,6 @@ config_t *config_new(void)
 	newconfig->colstr.title   = "";
 	newconfig->colstr.repo    = "";
 	newconfig->colstr.version = "";
-	newconfig->colstr.groups  = "";
 	newconfig->colstr.meta    = "";
 	newconfig->colstr.warn    = "";
 	newconfig->colstr.err     = "";
@@ -138,7 +136,6 @@ int config_free(config_t *oldconfig)
 
 	FREELIST(oldconfig->holdpkg);
 	FREELIST(oldconfig->ignorepkg);
-	FREELIST(oldconfig->ignoregrp);
 	FREELIST(oldconfig->assumeinstalled);
 	FREELIST(oldconfig->noupgrade);
 	FREELIST(oldconfig->noextract);
@@ -594,8 +591,6 @@ static int _parse_options(const char *key, char *value,
 			setrepeatingoption(value, "NoExtract", &(config->noextract));
 		} else if(strcmp(key, "IgnorePkg") == 0) {
 			setrepeatingoption(value, "IgnorePkg", &(config->ignorepkg));
-		} else if(strcmp(key, "IgnoreGroup") == 0) {
-			setrepeatingoption(value, "IgnoreGroup", &(config->ignoregrp));
 		} else if(strcmp(key, "HoldPkg") == 0) {
 			setrepeatingoption(value, "HoldPkg", &(config->holdpkg));
 		} else if(strcmp(key, "CacheDir") == 0) {

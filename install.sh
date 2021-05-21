@@ -63,12 +63,7 @@ wget http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-an
 pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
 rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
 sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
-wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
-pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz --noconfirm
-rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
 sed -i 's/#this//' $PREFIX/etc/pacman.conf
-#pacman-key --init
-#pacman-key --populate archlinuxarm
 
 info 'Run pacman.'
 pacman -Syu

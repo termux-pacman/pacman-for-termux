@@ -1126,7 +1126,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* check if we have sufficient permission for the requested operation */
-	if(myuid > 0 && needs_root()) {
+	if(myuid == 0) {
 		pm_printf(ALPM_LOG_ERROR, _("blocking operation, you can not run from the root of the user.\n"));
 		cleanup(EXIT_FAILURE);
 	}
@@ -1231,9 +1231,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Log command line */
-	if(needs_root()) {
-		cl_to_log(argc, argv);
-	}
+	//if(needs_root()) {
+	cl_to_log(argc, argv);
+	//}
 
 	/* start the requested operation */
 	switch(config->op) {

@@ -40,10 +40,10 @@ install_pacman(){
     exit 2
   fi
   cd pacman
-  if [[ -z $2 || "$2" == "config" ]]; then
+  if [[ -z $1 || "$1" == "config" ]]; then
     ./configure --prefix=$PREFIX
   fi
-  if [[ -z $2 || "$2" == "make" ]]; then
+  if [[ -z $1 || "$1" == "make" ]]; then
     set +e
     while :
     do
@@ -62,7 +62,7 @@ install_pacman(){
     done
     set -e
   fi
-  if [[ -z $2 || "$2" == "ins" ]]; then
+  if [[ -z $1 || "$1" == "ins" ]]; then
     make install
   fi
   cd ..
@@ -96,7 +96,7 @@ else
     install_packages
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
-    install_pacman
+    install_pacman $2
   fi
   if [[ -z $1 || "$1" == "set" ]]; then
     settings_pacman

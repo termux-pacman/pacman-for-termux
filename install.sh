@@ -93,13 +93,13 @@ if [[ "$1" == "help" ]]; then
   commet '  set - setting up pacman.'
 else
   if [[ -z $1 || "$1" == "upd" ]]; then
-    install_packages()
+    install_packages
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
-    install_pacman()
+    install_pacman
   fi
   if [[ -z $1 || "$1" == "set" ]]; then
-    settings_pacman()
+    settings_pacman
   fi
   info 'Done.'
 fi

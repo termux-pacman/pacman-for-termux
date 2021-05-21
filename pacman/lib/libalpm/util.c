@@ -377,11 +377,7 @@ int _alpm_unpack(alpm_handle_t *handle, const char *path, const char *prefix,
 
 		/* Extract the archive entry. */
 		int readret = archive_read_extract(archive, entry, 0);
-		if(readret == ARCHIVE_WARN) {
-			/* operation succeeded but a non-critical error was encountered */
-			_alpm_log(handle, ALPM_LOG_WARNING, _("warning given when extracting %s (%s)\n"),
-					entryname, archive_error_string(archive));
-		} else if(readret != ARCHIVE_OK) {
+		if(readret != ARCHIVE_OK && readret != ARCHIVE_WARN) {
 			_alpm_log(handle, ALPM_LOG_ERROR, _("could not extract %s (%s)\n"),
 					entryname, archive_error_string(archive));
 			ret = 1;

@@ -94,6 +94,7 @@ if [[ "$1" == "help" ]]; then
   commet '    make - run make.'
   commet '    ins - run make install'
   commet '  set - setting up pacman.'
+  echo
 else
   if [[ -z $1 || "$1" == "upd" ]]; then
     install_packages

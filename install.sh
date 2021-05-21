@@ -67,20 +67,11 @@ wget http://mirror.archlinuxarm.org/armv6h/core/archlinuxarm-keyring-20140119-1-
 pacman -U archlinuxarm-keyring-20140119-1-any.pkg.tar.xz --noconfirm
 rm archlinuxarm-keyring-20140119-1-any.pkg.tar.xz
 sed -i 's/#this//' $PREFIX/etc/pacman.conf
-pacman-key --init
-pacman-key --populate archlinuxarm
+#pacman-key --init
+#pacman-key --populate archlinuxarm
 
 info 'Run pacman.'
 pacman -Syu
-
-#rm $PREFIX/etc/bindresvport.blacklist
-#rm $PREFIX/etc/profile.d/gawk.sh
-#dir=$PREFIX/lib
-#for i in $(ls $dir)
-#do
-#       if [[ -d $dir/$i ]]; then
-#               rm -fr $dir/$i
-#       fi
-#done
+pacman -S filesystem --noconfirm
 
 info 'Done.'

@@ -73,6 +73,8 @@ install_pacman(){
 
 settings_pacman(){
   info 'Pacman settings.'
+  chmod 755 /data/data/com.termux/files/*
+  chmod 755 $PREFIX/*
   wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
   pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
   rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz

@@ -101,7 +101,7 @@ int trans_release(void)
 	return 0;
 }
 
-int needs_root(void)
+/*int needs_root(void)
 {
 	if(config->sysroot) {
 		return 0;
@@ -121,7 +121,7 @@ int needs_root(void)
 		default:
 			return 0;
 	}
-}
+}*/
 
 int check_syncdbs(size_t need_repos, int check_valid)
 {

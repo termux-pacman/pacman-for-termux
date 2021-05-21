@@ -72,7 +72,6 @@ void enable_colors(int colors)
 		colstr->title   = BOLD;
 		colstr->repo    = BOLDMAGENTA;
 		colstr->version = BOLDGREEN;
-		colstr->groups  = BOLDBLUE;
 		colstr->meta    = BOLDCYAN;
 		colstr->warn    = BOLDYELLOW;
 		colstr->err     = BOLDRED;

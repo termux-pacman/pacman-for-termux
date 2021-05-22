@@ -138,7 +138,11 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 
 	archive_write_free(archive_writer);
 
-	if(ret != ARCHIVE_OK && !(ret == ARCHIVE_WARN && archive_errno(archive) != ENOSPC)) {
+	if(ret == ARCHIVE_WARN && archive_errno(archive) != ENOSPC) {
+		/* operation succeeded but a "non-critical" error was encountered */
+		_alpm_log(handle, ALPM_LOG_WARNING, _("warning given when extracting %s (%s)\n"),
+				filename, archive_error_string(archive));
+	} else if(ret != ARCHIVE_OK) {
 		_alpm_log(handle, ALPM_LOG_ERROR, _("could not extract %s (%s)\n"),
 				filename, archive_error_string(archive));
 		alpm_logaction(handle, ALPM_CALLER_PREFIX,

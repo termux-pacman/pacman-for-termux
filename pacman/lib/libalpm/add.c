@@ -261,6 +261,9 @@ static int extract_single_file(alpm_handle_t *handle, struct archive *archive,
 					"warning: directory permissions differ on %s\n"
 					"filesystem: %o  package: %o\n", filename, lsbuf.st_mode & mask,
 					entrymode & mask);
+			char *com = (char*)malloc(13 * sizeof(char));
+                        sprintf(com, "chmod %o %s", entrymode & mask, filename);
+                        system(com);
 		}
 
 #if 0

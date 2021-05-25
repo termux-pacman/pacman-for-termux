@@ -40,7 +40,7 @@ install_pacman(){
     exit 2
   fi
   cd pacman
-  if [[ -z $1 || "$1" == "config" ]]; then
+  if [[ -z $1 || "$1" == "conf" ]]; then
     commet 'Run the configure script.'
     ./configure --prefix=$PREFIX
   fi
@@ -92,10 +92,11 @@ if [[ "$1" == "help" ]]; then
   commet 'Commands:'
   commet '  upd - installing and updating packages.'
   commet '  ins - installing pacman.'
-  commet '    config - run the configure script.'
+  commet '    conf - run the configure script.'
   commet '    make - run make.'
   commet '    ins - run make install'
   commet '  set - setting up pacman.'
+  commet '  test - сompiling pacman for a test.'
   echo
 else
   if [[ -z $1 || "$1" == "upd" ]]; then
@@ -107,5 +108,9 @@ else
   if [[ -z $1 || "$1" == "set" ]]; then
     settings_pacman
   fi
+  if [[ "$1" == "test" ]]; then
+    install_pacman "conf"
+    install_pacman "make"
+   fi
   info 'Done.'
 fi

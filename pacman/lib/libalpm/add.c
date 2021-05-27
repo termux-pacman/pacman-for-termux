@@ -121,6 +121,8 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 	                          ARCHIVE_EXTRACT_TIME |
 	                          ARCHIVE_EXTRACT_UNLINK |
 	                          ARCHIVE_EXTRACT_SECURE_SYMLINKS;
+	uid_t uid = getuid();
+        gid_t gid = getgid();
 
 	archive_entry_set_pathname(entry, filename);
 
@@ -131,6 +133,9 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 				"error: cannot allocate disk archive object");
 		return 1;
 	}
+
+	archive_entry_set_uid(entry, uid);
+        archive_entry_set_gid(entry, gid);
 
 	archive_write_disk_set_options(archive_writer, archive_flags);
 

@@ -32,7 +32,8 @@ install_pacman(){
     echo '  export TERMUX_CHROOT=1' >> $file
     echo '  exec termux-chroot' >> $file
     echo 'fi' >> $file
-    termux-chroot
+    bash
+    cd ~/pacman-for-termux
     commet 'The setup is ready.'
   else
     commet 'Everything is set up already.'

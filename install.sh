@@ -25,19 +25,6 @@ install_packages(){
 }
 
 install_pacman(){
-  info 'Setting up termux.'
-  file=$PREFIX/etc/bash.bashrc
-  if [[ -z "`grep termux-chroot $file`" ]]; then
-    echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
-    echo '  export TERMUX_CHROOT=1' >> $file
-    echo '  exec termux-chroot' >> $file
-    echo 'fi' >> $file
-    source $file
-    commet 'The setup is ready.'
-  else
-    commet 'Everything is set up already.'
-  fi
-
   info 'Installing pacman.'
   if [[ ! -d pacman ]]; then
     error 'Not found: pacman.'
@@ -82,12 +69,25 @@ settings_pacman(){
   wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
   pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
   rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-  #sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
+  sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
   sed -i 's/#this//' $PREFIX/etc/pacman.conf
 
   info 'Run pacman.'
   pacman -Syu
   pacman -S filesystem --noconfirm
+
+  #info 'Setting up termux.'
+  #file=$PREFIX/etc/bash.bashrc
+  #if [[ -z "`grep termux-chroot $file`" ]]; then
+    #echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
+    #echo '  export TERMUX_CHROOT=1' >> $file
+    #echo '  exec termux-chroot' >> $file
+    #echo 'fi' >> $file
+    #source $file
+    #commet 'The setup is ready.'
+  #else
+    #commet 'Everything is set up already.'
+  #fi
 }
 
 if [[ "$1" == "help" ]]; then

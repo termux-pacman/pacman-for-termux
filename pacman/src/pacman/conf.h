@@ -119,7 +119,6 @@ typedef struct __config_t {
 	unsigned short cleanmethod;
 	alpm_list_t *holdpkg;
 	alpm_list_t *ignorepkg;
-	alpm_list_t *ignoregrp;
 	alpm_list_t *assumeinstalled;
 	alpm_list_t *noupgrade;
 	alpm_list_t *noextract;
@@ -167,7 +166,6 @@ enum {
 	OP_HOOKDIR,
 	OP_ASDEPS,
 	OP_LOGFILE,
-	OP_IGNOREGROUP,
 	OP_NEEDED,
 	OP_ASEXPLICIT,
 	OP_ARCH,

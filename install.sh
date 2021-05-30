@@ -76,18 +76,18 @@ settings_pacman(){
   pacman -S iana-etc --noconfirm
   sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
 
-  #info 'Setting up termux.'
-  #file=$PREFIX/etc/bash.bashrc
-  #if [[ -z "`grep termux-chroot $file`" ]]; then
-    #echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
-    #echo '  export TERMUX_CHROOT=1' >> $file
-    #echo '  exec termux-chroot' >> $file
-    #echo 'fi' >> $file
-    #source $file
-    #commet 'The setup is ready.'
-  #else
-    #commet 'Everything is set up already.'
-  #fi
+  info 'Setting up termux.'
+  file=$PREFIX/etc/bash.bashrc
+  if [[ -z "`grep termux-chroot $file`" ]]; then
+    echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
+    echo '  export TERMUX_CHROOT=1' >> $file
+    echo '  exec termux-chroot' >> $file
+    echo 'fi' >> $file
+    commet 'The setup is ready.'
+    info 'Reload termux.'
+  else
+    commet 'Everything is set up already.'
+  fi
 }
 
 if [[ "$1" == "help" ]]; then

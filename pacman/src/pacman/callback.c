@@ -373,7 +373,7 @@ void cb_question(alpm_question_t *question)
 			{
 				alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
 				if(!config->op_s_downloadonly) {
-					q->install = yesno(_("%s is in IgnorePkg/IgnoreGroup. Install anyway?"),
+					q->install = yesno(_("%s is in IgnorePkg. Install anyway?"),
 							alpm_pkg_get_name(q->pkg));
 				} else {
 					q->install = 1;

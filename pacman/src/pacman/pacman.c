@@ -931,7 +931,6 @@ static int parseargs(int argc, char *argv[])
 		{"hookdir",    required_argument, 0, OP_HOOKDIR},
 		{"asdeps",     no_argument,       0, OP_ASDEPS},
 		{"logfile",    required_argument, 0, OP_LOGFILE},
-		{"ignoregroup", required_argument, 0, OP_IGNOREGROUP},
 		{"needed",     no_argument,       0, OP_NEEDED},
 		{"asexplicit",     no_argument,   0, OP_ASEXPLICIT},
 		{"arch",       required_argument, 0, OP_ARCH},

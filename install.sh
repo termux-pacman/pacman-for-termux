@@ -74,7 +74,7 @@ settings_pacman(){
 
   info 'Run pacman.'
   pacman -Syu
-  pacman -S filesystem --noconfirm
+  #pacman -S filesystem --noconfirm
 
   info 'Setting up termux.'
   file=$PREFIX/etc/profile

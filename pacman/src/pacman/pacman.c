@@ -729,9 +729,6 @@ static int parsearg_upgrade(int opt)
 		case OP_IGNORE:
 			parsearg_util_addlist(&(config->ignorepkg));
 			break;
-		case OP_IGNOREGROUP:
-			parsearg_util_addlist(&(config->ignoregrp));
-			break;
 		default: return 1;
 	}
 	return 0;

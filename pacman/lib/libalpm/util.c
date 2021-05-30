@@ -592,13 +592,6 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 		_alpm_log(handle, ALPM_LOG_ERROR, _("could not get current working directory\n"));
 	}
 
-	/* just in case our cwd was removed in the upgrade operation */
-	/*if(chdir(handle->root) != 0) {
-		_alpm_log(handle, ALPM_LOG_ERROR, _("could not change directory to %s (%s)\n"),
-				handle->root, strerror(errno));
-		goto cleanup;
-	}*/
-
 	_alpm_log(handle, ALPM_LOG_DEBUG, "executing \"%s\" under chroot \"%s\"\n",
 			cmd, handle->root);
 

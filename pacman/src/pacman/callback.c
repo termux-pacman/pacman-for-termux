@@ -372,12 +372,15 @@ void cb_question(alpm_question_t *question)
 		case ALPM_QUESTION_INSTALL_IGNOREPKG:
 			{
 				alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
-				if(!config->op_s_downloadonly) {
+				/*if(!config->op_s_downloadonly) {
 					q->install = yesno(_("%s is in IgnorePkg. Install anyway?"),
 							alpm_pkg_get_name(q->pkg));
 				} else {
 					q->install = 1;
-				}
+				}*/
+				printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List."),
+					alpm_pkg_get_name(q->pkg));
+				q->install = 1;
 			}
 			break;
 		case ALPM_QUESTION_REPLACE_PKG:

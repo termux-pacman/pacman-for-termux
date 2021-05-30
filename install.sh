@@ -70,11 +70,11 @@ settings_pacman(){
   pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
   rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
   sed -i 's/#this//' $PREFIX/etc/pacman.conf
+  sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
 
   info 'Run pacman.'
   pacman -Syu
-  pacman -S iana-etc --noconfirm
-  sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
+  pacman -S filesystem --noconfirm
 
   info 'Setting up termux.'
   file=$PREFIX/etc/bash.bashrc

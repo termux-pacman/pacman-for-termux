@@ -380,7 +380,7 @@ void cb_question(alpm_question_t *question)
 				}*/
 				printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List."),
 					alpm_pkg_get_name(q->pkg));
-				q->install = 1;
+				q->install = 0;
 			}
 			break;
 		case ALPM_QUESTION_REPLACE_PKG:

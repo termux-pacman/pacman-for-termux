@@ -245,7 +245,6 @@ static void dump_config(void)
 
 	show_list_str("HoldPkg", config->holdpkg);
 	show_list_str("IgnorePkg", config->ignorepkg);
-	show_list_str("IgnoreGroup", config->ignoregrp);
 	show_list_str("NoUpgrade", config->noupgrade);
 	show_list_str("NoExtract", config->noextract);
 
@@ -343,8 +342,6 @@ static int list_directives(void)
 			show_list_str("HoldPkg", config->holdpkg);
 		} else if(strcasecmp(i->data, "IgnorePkg") == 0) {
 			show_list_str("IgnorePkg", config->ignorepkg);
-		} else if(strcasecmp(i->data, "IgnoreGroup") == 0) {
-			show_list_str("IgnoreGroup", config->ignoregrp);
 		} else if(strcasecmp(i->data, "NoUpgrade") == 0) {
 			show_list_str("NoUpgrade", config->noupgrade);
 		} else if(strcasecmp(i->data, "NoExtract") == 0) {

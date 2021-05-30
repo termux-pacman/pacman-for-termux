@@ -82,6 +82,7 @@ settings_pacman(){
     echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
     echo '  export TERMUX_CHROOT=1' >> $file
     echo '  exec termux-chroot' >> $file
+    echo '  unset LD_PRELOAD' >> $file
     echo 'fi' >> $file
     commet 'The setup is ready.'
     info 'Reload termux.'

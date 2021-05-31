@@ -77,6 +77,8 @@ settings_pacman(){
   #pacman -S filesystem --noconfirm
 
   info 'Setting up termux.'
+  ln -s $PREFIX/bin /data/data/com.termux/files/bin
+  ln -s $PREFIX/lib /data/data/com.termux/files/lib
   file=$PREFIX/etc/profile
   if [[ -z "`grep termux-chroot $file`" ]]; then
     echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file

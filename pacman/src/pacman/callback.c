@@ -37,6 +37,9 @@
 #include "util.h"
 #include "conf.h"
 
+/* List of pays - list_pack */
+#include "pack_list_unsup.h"
+
 /* download progress bar */
 static off_t list_xfered = 0.0;
 static off_t list_total = 0.0;

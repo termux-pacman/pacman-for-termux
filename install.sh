@@ -134,5 +134,6 @@ else
   if [[ -z $1 || "$1" == "set" ]]; then
     settings_pacman
   fi
-  info 'Done.'
 fi
+
+info 'Done.'

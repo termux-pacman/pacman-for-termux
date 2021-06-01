@@ -98,9 +98,9 @@ settings2_pacman(){
     error 'The /bin and /lib directory is not available.'
     exit 2
   fi
+  pacman -Syu
   rm /bin
   rm /lib
-  pacman -Syu
   pacman -S filesystem archlinuxarm-keyring --noconfirm
   pacman-key --init
   pacman-key --populate archlinuxarm

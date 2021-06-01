@@ -71,6 +71,9 @@ settings_pacman(){
   rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
   sed -i 's/#this//' $PREFIX/etc/pacman.conf
   sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
+  if [[ "`uname -m`" == "armv7l" ]]; then
+    sed -i 's/Architecture = auto/Architecture = armv7h/' $PREFIX/etc/pacman.conf
+  fi
 
   info 'Run pacman.'
   pacman -Syu

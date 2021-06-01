@@ -361,7 +361,7 @@ void cb_question(alpm_question_t *question)
 {
 	alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
 	char * type = (char*)malloc(13 * sizeof(char));
-	bool a = true;
+	int a = 0;
 	for (int i = 0; 1; i++) {
 		sprintf(type, "%d", ((char**)&list_pack)[i]);
 		if (strcmp(type, "0") != 0) {
@@ -369,13 +369,13 @@ void cb_question(alpm_question_t *question)
 				printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
 							alpm_pkg_get_name(q->pkg));
 				q->install = 0;
-				a = false;
+				a = 1;
             		}
         	} else {
             		break;
         	}
 	}
-	if (a) {
+	if (a == 0) {
 		if(config->print) {
 			switch(question->type) {
 				case ALPM_QUESTION_INSTALL_IGNOREPKG:

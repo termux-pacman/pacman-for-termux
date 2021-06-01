@@ -35,6 +35,9 @@
 #include "handle.h"
 #include "trans.h"
 
+/* List of pays - list_pack */
+#include "pack_list_unsup.h"
+
 void SYMEXPORT alpm_dep_free(alpm_depend_t *dep)
 {
 	ASSERT(dep != NULL, return);

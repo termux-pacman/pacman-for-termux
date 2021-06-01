@@ -1,10 +1,10 @@
 # pacman-for-termux
 
 ## Note:
-This pacman is not fully wall-mounted, so there may be bugs.  If you find a bug, write in the issues.  
+At this point, pacman is not fully configured for termux, so there may be bugs.  
 
 ## A warning:
-Do not use `--overwrite` when installing packages as there is a chance of breaking the termux system.
+Do not use `--overwrite` when installing packages as there is a chance of breaking the termux system ([more details](https://github.com/termux/termux-packages/issues/6842#issuecomment-845887799)).
 
 ## Commands for installing pacman.
 ```
@@ -13,4 +13,9 @@ pkg install git -y
 git clone https://github.com/Maxython/pacman-for-termux
 cd pacman-for-termux
 ./install.sh
+```
+After these commands, restart termux and run the following command.
+```
+cd pacman-for-termux
+./install.sh set2
 ```

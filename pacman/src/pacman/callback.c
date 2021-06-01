@@ -361,129 +361,131 @@ void cb_question(alpm_question_t *question)
 {
 	alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
 	char * type = (char*)malloc(13 * sizeof(char));
-	for (int i = 0; 1; i++){
+	bool a = true;
+	for (int i = 0; 1; i++) {
 		sprintf(type, "%d", ((char**)&list_pack)[i]);
 		if (strcmp(type, "0") != 0) {
             		if (((char**)&list_pack)[i] == alpm_pkg_get_name(q->pkg)){
+				printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
+							alpm_pkg_get_name(q->pkg));
 				q->install = 0;
-                		return;
+				a = false;
             		}
         	} else {
             		break;
         	}
 	}
-	if(config->print) {
+	if (a) {
+		if(config->print) {
+			switch(question->type) {
+				case ALPM_QUESTION_INSTALL_IGNOREPKG:
+				case ALPM_QUESTION_REPLACE_PKG:
+					question->any.answer = 1;
+					break;
+				default:
+					question->any.answer = 0;
+					break;
+			}
+			return;
+		}
 		switch(question->type) {
 			case ALPM_QUESTION_INSTALL_IGNOREPKG:
-			case ALPM_QUESTION_REPLACE_PKG:
-				question->any.answer = 1;
+				{
+					if(!config->op_s_downloadonly) {
+						q->install = yesno(_("%s is in IgnorePkg. Install anyway?"),
+								alpm_pkg_get_name(q->pkg));
+					} else {
+						q->install = 1;
+					}
+				}
 				break;
-			default:
-				question->any.answer = 0;
+			case ALPM_QUESTION_REPLACE_PKG:
+				{
+					alpm_question_replace_t *q = &question->replace;
+					q->replace = yesno(_("Replace %s with %s/%s?"),
+							alpm_pkg_get_name(q->oldpkg),
+							alpm_db_get_name(q->newdb),
+							alpm_pkg_get_name(q->newpkg));
+				}
+				break;
+			case ALPM_QUESTION_CONFLICT_PKG:
+				{
+					alpm_question_conflict_t *q = &question->conflict;
+					/* print conflict only if it contains new information */
+					if(strcmp(q->conflict->package1, q->conflict->reason->name) == 0
+							|| strcmp(q->conflict->package2, q->conflict->reason->name) == 0) {
+						q->remove = noyes(_("%s and %s are in conflict. Remove %s?"),
+								q->conflict->package1,
+								q->conflict->package2,
+								q->conflict->package2);
+					} else {
+						q->remove = noyes(_("%s and %s are in conflict (%s). Remove %s?"),
+								q->conflict->package1,
+								q->conflict->package2,
+								q->conflict->reason->name,
+								q->conflict->package2);
+					}
+				}
+				break;
+			case ALPM_QUESTION_REMOVE_PKGS:
+				{
+					alpm_question_remove_pkgs_t *q = &question->remove_pkgs;
+					alpm_list_t *namelist = NULL, *i;
+					size_t count = 0;
+					for(i = q->packages; i; i = i->next) {
+						namelist = alpm_list_add(namelist,
+								(char *)alpm_pkg_get_name(i->data));
+						count++;
+					}
+					colon_printf(_n(
+								"The following package cannot be upgraded due to unresolvable dependencies:\n",
+								"The following packages cannot be upgraded due to unresolvable dependencies:\n",
+								count));
+					list_display("     ", namelist, getcols());
+					printf("\n");
+					q->skip = noyes(_n(
+								"Do you want to skip the above package for this upgrade?",
+								"Do you want to skip the above packages for this upgrade?",
+								count));
+					alpm_list_free(namelist);
+				}
+				break;
+			case ALPM_QUESTION_SELECT_PROVIDER:
+				{
+					alpm_question_select_provider_t *q = &question->select_provider;
+					size_t count = alpm_list_count(q->providers);
+					char *depstring = alpm_dep_compute_string(q->depend);
+					colon_printf(_n("There is %zu provider available for %s\n",
+							"There are %zu providers available for %s:\n", count),
+							count, depstring);
+					free(depstring);
+					select_display(q->providers);
+					q->use_index = select_question(count);
+				}
+				break;
+			case ALPM_QUESTION_CORRUPTED_PKG:
+				{
+					alpm_question_corrupted_t *q = &question->corrupted;
+					q->remove = yesno(_("File %s is corrupted (%s).\n"
+								"Do you want to delete it?"),
+							q->filepath,
+							alpm_strerror(q->reason));
+				}
+				break;
+			case ALPM_QUESTION_IMPORT_KEY:
+				{
+					alpm_question_import_key_t *q = &question->import_key;
+					/* the uid is unknown with db signatures */
+					if (q->key->uid == NULL) {
+						q->import = yesno(_("Import PGP key %s?"),
+								q->key->fingerprint);
+					} else {
+						q->import = yesno(_("Import PGP key %s, \"%s\"?"),
+								q->key->fingerprint, q->key->uid);
+					}
+				}
 				break;
 		}
-		return;
-	}
-	switch(question->type) {
-		case ALPM_QUESTION_INSTALL_IGNOREPKG:
-			{
-				if(!config->op_s_downloadonly) {
-					q->install = yesno(_("%s is in IgnorePkg. Install anyway?"),
-							alpm_pkg_get_name(q->pkg));
-					/*printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
-						alpm_pkg_get_name(q->pkg));
-					q->install = 0;*/
-				} else {
-					q->install = 1;
-				}
-			}
-			break;
-		case ALPM_QUESTION_REPLACE_PKG:
-			{
-				alpm_question_replace_t *q = &question->replace;
-				q->replace = yesno(_("Replace %s with %s/%s?"),
-						alpm_pkg_get_name(q->oldpkg),
-						alpm_db_get_name(q->newdb),
-						alpm_pkg_get_name(q->newpkg));
-			}
-			break;
-		case ALPM_QUESTION_CONFLICT_PKG:
-			{
-				alpm_question_conflict_t *q = &question->conflict;
-				/* print conflict only if it contains new information */
-				if(strcmp(q->conflict->package1, q->conflict->reason->name) == 0
-						|| strcmp(q->conflict->package2, q->conflict->reason->name) == 0) {
-					q->remove = noyes(_("%s and %s are in conflict. Remove %s?"),
-							q->conflict->package1,
-							q->conflict->package2,
-							q->conflict->package2);
-				} else {
-					q->remove = noyes(_("%s and %s are in conflict (%s). Remove %s?"),
-							q->conflict->package1,
-							q->conflict->package2,
-							q->conflict->reason->name,
-							q->conflict->package2);
-				}
-			}
-			break;
-		case ALPM_QUESTION_REMOVE_PKGS:
-			{
-				alpm_question_remove_pkgs_t *q = &question->remove_pkgs;
-				alpm_list_t *namelist = NULL, *i;
-				size_t count = 0;
-				for(i = q->packages; i; i = i->next) {
-					namelist = alpm_list_add(namelist,
-							(char *)alpm_pkg_get_name(i->data));
-					count++;
-				}
-				colon_printf(_n(
-							"The following package cannot be upgraded due to unresolvable dependencies:\n",
-							"The following packages cannot be upgraded due to unresolvable dependencies:\n",
-							count));
-				list_display("     ", namelist, getcols());
-				printf("\n");
-				q->skip = noyes(_n(
-							"Do you want to skip the above package for this upgrade?",
-							"Do you want to skip the above packages for this upgrade?",
-							count));
-				alpm_list_free(namelist);
-			}
-			break;
-		case ALPM_QUESTION_SELECT_PROVIDER:
-			{
-				alpm_question_select_provider_t *q = &question->select_provider;
-				size_t count = alpm_list_count(q->providers);
-				char *depstring = alpm_dep_compute_string(q->depend);
-				colon_printf(_n("There is %zu provider available for %s\n",
-						"There are %zu providers available for %s:\n", count),
-						count, depstring);
-				free(depstring);
-				select_display(q->providers);
-				q->use_index = select_question(count);
-			}
-			break;
-		case ALPM_QUESTION_CORRUPTED_PKG:
-			{
-				alpm_question_corrupted_t *q = &question->corrupted;
-				q->remove = yesno(_("File %s is corrupted (%s).\n"
-							"Do you want to delete it?"),
-						q->filepath,
-						alpm_strerror(q->reason));
-			}
-			break;
-		case ALPM_QUESTION_IMPORT_KEY:
-			{
-				alpm_question_import_key_t *q = &question->import_key;
-				/* the uid is unknown with db signatures */
-				if (q->key->uid == NULL) {
-					q->import = yesno(_("Import PGP key %s?"),
-							q->key->fingerprint);
-				} else {
-					q->import = yesno(_("Import PGP key %s, \"%s\"?"),
-							q->key->fingerprint, q->key->uid);
-				}
-			}
-			break;
 	}
 	if(config->noask) {
 		if(config->ask & question->type) {

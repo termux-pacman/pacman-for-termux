@@ -7,7 +7,7 @@ struct str_pac
     char * p3;
 };
 
-struct str_pac list_pac = {
+struct str_pac list_pack = {
     "pacman",
     "bash",
     "sudo"

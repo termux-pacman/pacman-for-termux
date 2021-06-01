@@ -340,31 +340,49 @@ alpm_list_t SYMEXPORT *alpm_checkdeps(alpm_handle_t *handle,
 	/* look for unsatisfied dependencies of the upgrade list */
 	for(i = upgrade; i; i = i->next) {
 		alpm_pkg_t *tp = i->data;
+		char * type = (char*)malloc(13 * sizeof(char));
+		int a = 0;
 		_alpm_log(handle, ALPM_LOG_DEBUG, "checkdeps: package %s-%s\n",
 				tp->name, tp->version);
+		
+		for (int h = 0; 1; h++) {
+			sprintf(type, "%d", ((char**)&list_pack)[h]);
+			if (strcmp(type, "0") != 0) {
+            			if (((char**)&list_pack)[h] == tp->name){
+					/*printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
+								alpm_pkg_get_name(q->pkg));*/
+					//q->install = 0;
+					a = 1;
+            			}
+        		} else {
+            			break;
+        		}
+		}
 
-		for(j = alpm_pkg_get_depends(tp); j; j = j->next) {
-			alpm_depend_t *depend = j->data;
-			alpm_depmod_t orig_mod = depend->mod;
-			if(nodepversion) {
-				depend->mod = ALPM_DEP_MOD_ANY;
+		if (a == 0) {
+			for(j = alpm_pkg_get_depends(tp); j; j = j->next) {
+				alpm_depend_t *depend = j->data;
+				alpm_depmod_t orig_mod = depend->mod;
+				if(nodepversion) {
+					depend->mod = ALPM_DEP_MOD_ANY;
+				}
+				/* 1. we check the upgrade list */
+				/* 2. we check database for untouched satisfying packages */
+				/* 3. we check the dependency ignore list */
+				if(!find_dep_satisfier(upgrade, depend) &&
+						!find_dep_satisfier(dblist, depend) &&
+						!_alpm_depcmp_provides(depend, handle->assumeinstalled)) {
+					/* Unsatisfied dependency in the upgrade list */
+					alpm_depmissing_t *miss;
+					char *missdepstring = alpm_dep_compute_string(depend);
+					_alpm_log(handle, ALPM_LOG_DEBUG, "checkdeps: missing dependency '%s' for package '%s'\n",
+							missdepstring, tp->name);
+					free(missdepstring);
+					miss = depmiss_new(tp->name, depend, NULL);
+					baddeps = alpm_list_add(baddeps, miss);
+				}
+				depend->mod = orig_mod;
 			}
-			/* 1. we check the upgrade list */
-			/* 2. we check database for untouched satisfying packages */
-			/* 3. we check the dependency ignore list */
-			if(!find_dep_satisfier(upgrade, depend) &&
-					!find_dep_satisfier(dblist, depend) &&
-					!_alpm_depcmp_provides(depend, handle->assumeinstalled)) {
-				/* Unsatisfied dependency in the upgrade list */
-				alpm_depmissing_t *miss;
-				char *missdepstring = alpm_dep_compute_string(depend);
-				_alpm_log(handle, ALPM_LOG_DEBUG, "checkdeps: missing dependency '%s' for package '%s'\n",
-						missdepstring, tp->name);
-				free(missdepstring);
-				miss = depmiss_new(tp->name, depend, NULL);
-				baddeps = alpm_list_add(baddeps, miss);
-			}
-			depend->mod = orig_mod;
 		}
 	}
 

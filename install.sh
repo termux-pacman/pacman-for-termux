@@ -74,7 +74,6 @@ settings_pacman(){
 
   info 'Run pacman.'
   pacman -Syu
-  #pacman -S filesystem --noconfirm
 
   info 'Setting up termux.'
   ln -s $PREFIX/bin /data/data/com.termux/files/bin
@@ -93,6 +92,20 @@ settings_pacman(){
   fi
 }
 
+settings2_pacman(){
+  info 'Start the second part of the setup.'
+  if [[ ! -d /bin || ! -d /lib ]]; then
+    error 'The /bin and /lib directory is not available.'
+    exit 2
+  fi
+  rm /bin
+  rm /lib
+  pacman -Syu
+  pacman -S filesystem archlinuxarm-keyring --noconfirm
+  pacman-key --init
+  pacman-key --populate archlinuxarm
+}
+
 if [[ "$1" == "help" ]]; then
   info 'Help'
   commet 'When running a specific command, only that command will be executed.'
@@ -103,8 +116,14 @@ if [[ "$1" == "help" ]]; then
   commet '    make - run make.'
   commet '    ins - run make install'
   commet '  set - setting up pacman.'
+  commet '  set2 - second part of pacman setup (only run after termux reboot).'
   commet '  test - сompiling pacman for a test.'
   echo
+elif [[ "$1" == "test" ]]; then
+  install_pacman "conf"
+  install_pacman "make"
+elif [[ "$1" == "set2" ]]; then
+  settings2_pacman
 else
   if [[ -z $1 || "$1" == "upd" ]]; then
     install_packages
@@ -115,9 +134,5 @@ else
   if [[ -z $1 || "$1" == "set" ]]; then
     settings_pacman
   fi
-  if [[ "$1" == "test" ]]; then
-    install_pacman "conf"
-    install_pacman "make"
-   fi
   info 'Done.'
 fi

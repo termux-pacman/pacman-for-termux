@@ -109,7 +109,7 @@ settings2_pacman(){
   pacman-key --populate archlinuxarm
 
   info 'Removing deb packages.'
-  apt-get purge clang -y
+  apt-get purge clang python -y
   apt autoremove -y
   pkg install libarchive -y
 }

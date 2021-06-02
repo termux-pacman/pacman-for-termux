@@ -107,6 +107,11 @@ settings2_pacman(){
   pacman -S filesystem archlinuxarm-keyring --noconfirm
   pacman-key --init
   pacman-key --populate archlinuxarm
+
+  info 'Removing deb packages.'
+  apt-get purge clang -y
+  apt autoremove -y
+  pkg install libarchive -y
 }
 
 if [[ "$1" == "help" ]]; then

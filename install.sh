@@ -116,6 +116,8 @@ settings2_pacman(){
 
 if [[ "$1" == "help" ]]; then
   info 'Help'
+  commet 'Installer script for pacman on termux.'
+  commet 'The latest available version of pacman is 5.2.2 .'
   commet 'When running a specific command, only that command will be executed.'
   commet 'Commands:'
   commet '  upd - installing and updating packages.'
@@ -126,7 +128,6 @@ if [[ "$1" == "help" ]]; then
   commet '  set - setting up pacman.'
   commet '  set2 - second part of pacman setup (only run after termux reboot).'
   commet '  test - сompiling pacman for a test.'
-  echo
 elif [[ "$1" == "test" ]]; then
   install_pacman "conf"
   install_pacman "make"

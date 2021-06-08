@@ -104,9 +104,9 @@ settings2_pacman(){
   pacman -Syu
   rm /bin
   rm /lib
-  pacman -S filesystem archlinuxarm-keyring --noconfirm
   pacman-key --init
-  pacman-key --populate archlinuxarm
+  pacman -S filesystem archlinuxarm-keyring archlinux-keyring --noconfirm --color=always
+  pacman-key --populate
 
   info 'Removing deb packages.'
   apt-get purge clang python -y

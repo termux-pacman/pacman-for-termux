@@ -105,7 +105,7 @@ settings2_pacman(){
   rm /bin
   rm /lib
   pacman-key --init
-  pacman -S filesystem archlinuxarm-keyring archlinux-keyring --noconfirm --color=always
+  pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
   pacman-key --populate
 
   info 'Removing deb packages.'

@@ -104,6 +104,7 @@ settings2_pacman(){
   pacman -Syu
   rm /bin
   rm /lib
+  rm /bin/login
   pacman-key --init
   pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
   pacman-key --populate
@@ -116,16 +117,18 @@ settings2_pacman(){
 
 if [[ "$1" == "help" ]]; then
   info 'Help'
+  commet './install.sh [com1] [com2]'
   commet 'Installer script for pacman on termux.'
   commet 'The latest available version of pacman is 5.2.2 .'
+  commet 'Commands with [auto] highlighted will be executed automatically if nothing is specified.'
   commet 'When running a specific command, only that command will be executed.'
   commet 'Commands:'
-  commet '  upd - installing and updating packages.'
-  commet '  ins - installing pacman.'
-  commet '    conf - run the configure script.'
-  commet '    make - run make.'
-  commet '    ins - run make install'
-  commet '  set - setting up pacman.'
+  commet '  upd[auto] - installing and updating packages.'
+  commet '  ins[auto] - installing pacman.'
+  commet '    conf[auto] - run the configure script.'
+  commet '    make[auto] - run make.'
+  commet '    ins[auto] - run make install'
+  commet '  set[auto] - setting up pacman.'
   commet '  set2 - second part of pacman setup (only run after termux reboot).'
   commet '  test - сompiling pacman for a test.'
 elif [[ "$1" == "test" ]]; then

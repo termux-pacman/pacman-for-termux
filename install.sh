@@ -102,9 +102,9 @@ settings2_pacman(){
     exit 2
   fi
   pacman -Syu
+  rm /bin/login
   rm /bin
   rm /lib
-  rm /bin/login
   pacman-key --init
   pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
   pacman-key --populate

@@ -96,23 +96,26 @@ settings_pacman(){
 }
 
 settings2_pacman(){
-  info 'Start the second part of the setup.'
-  if [[ ! -d /bin || ! -d /lib ]]; then
-    error 'The /bin and /lib directory is not available.'
-    exit 2
+  if [[ -z $1 || "$1" == "ins" ]]; then
+    info 'Start the second part of the setup.'
+    if [[ ! -d /bin || ! -d /lib ]]; then
+      error 'The /bin and /lib directory is not available.'
+      exit 2
+    fi
+    pacman -Syu
+    rm /bin
+    rm /lib
+    pacman-key --init
+    pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
+    pacman-key --populate
   fi
-  pacman -Syu
-  rm /bin/login
-  rm /bin
-  rm /lib
-  pacman-key --init
-  pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
-  pacman-key --populate
 
-  info 'Removing deb packages.'
-  apt-get purge clang python -y
-  apt autoremove -y
-  pkg install libarchive -y
+  if [[ -z $1 || "$1" == "rem" ]]; then
+    info 'Removing deb packages.'
+    apt-get purge clang python -y
+    apt autoremove -y
+    pkg install libarchive -y
+  fi
 }
 
 if [[ "$1" == "help" ]]; then
@@ -130,12 +133,14 @@ if [[ "$1" == "help" ]]; then
   commet '    ins[auto] - run make install'
   commet '  set[auto] - setting up pacman.'
   commet '  set2 - second part of pacman setup (only run after termux reboot).'
+  commet '    ins[auto] - installing arch packages.'
+  commet '    rem[auto] - removing deb packages.'
   commet '  test - сompiling pacman for a test.'
 elif [[ "$1" == "test" ]]; then
   install_pacman "conf"
   install_pacman "make"
 elif [[ "$1" == "set2" ]]; then
-  settings2_pacman
+  settings2_pacman $2
 else
   if [[ -z $1 || "$1" == "upd" ]]; then
     install_packages

@@ -82,7 +82,11 @@ settings_pacman(){
   ln -s $PREFIX/bin /data/data/com.termux/files/bin
   ln -s $PREFIX/lib /data/data/com.termux/files/lib
   file=$PREFIX/etc/profile
+  if [[ -z "`grep 'export LD_LIBRARY_PATH' $file`" ]]; then
+     sed -i '1s/^/export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n/' $file
+  fi
   if [[ -z "`grep termux-chroot $file`" ]]; then
+    echo '' >> $file
     echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
     echo '  export TERMUX_CHROOT=1' >> $file
     echo '  exec termux-chroot' >> $file
@@ -96,6 +100,9 @@ settings_pacman(){
   fi
 
   info 'Reload termux.'
+  if [[ ! -f exit.sh ]]; then
+    echo 'logout 1' >> exit.sh
+  fi
   source exit.sh
 }
 

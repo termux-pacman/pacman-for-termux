@@ -93,6 +93,8 @@ settings_pacman(){
   else
     commet 'Everything is set up already.'
   fi
+
+  source exit.sh
 }
 
 settings2_pacman(){

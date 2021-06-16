@@ -87,13 +87,15 @@ settings_pacman(){
     echo '  export TERMUX_CHROOT=1' >> $file
     echo '  exec termux-chroot' >> $file
     echo 'fi' >> $file
-    echo 'unset LD_PRELOAD' >> $file
     commet 'The setup is ready.'
-    info 'Reload termux.'
   else
     commet 'Everything is set up already.'
   fi
+  if [[ -z "`grep 'unset LD_PRELOAD' $file`" ]]; then
+    echo 'unset LD_PRELOAD' >> $file
+  fi
 
+  info 'Reload termux.'
   source exit.sh
 }
 

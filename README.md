@@ -18,8 +18,7 @@ cd pacman-for-termux
 ```
 After these commands, restart termux and run the following command.
 ```
-cd pacman-for-termux
-./install.sh set2
+./pacman-for-termux/install.sh set2
 ```
 
 ## The configured arch packages are located [here](https://github.com/Maxython/arch-packages-for-termux).

@@ -83,7 +83,7 @@ settings_pacman(){
   ln -s $PREFIX/lib /data/data/com.termux/files/lib
   file=$PREFIX/etc/profile
   if [[ -z "`grep 'export LD_LIBRARY_PATH' $file`" ]]; then
-     sed -i '1s/^/export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n/' $file
+     sed -i '1s+^+export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n+' $file
   fi
   if [[ -z "`grep termux-chroot $file`" ]]; then
     echo '' >> $file

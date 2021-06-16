@@ -79,8 +79,12 @@ settings_pacman(){
   pacman -Syu
 
   info 'Setting up termux.'
-  ln -s $PREFIX/bin /data/data/com.termux/files/bin
-  ln -s $PREFIX/lib /data/data/com.termux/files/lib
+  for i in bin lib
+  do
+    if [[ ! -d /data/data/com.termux/files/$i ]]; then
+      ln -s $PREFIX/$i /data/data/com.termux/files/$i
+    fi
+  done
   file=$PREFIX/etc/profile
   if [[ -z "`grep 'export LD_LIBRARY_PATH' $file`" ]]; then
      sed -i '1s+^+export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n+' $file
@@ -100,10 +104,8 @@ settings_pacman(){
   fi
 
   info 'Reload termux.'
-  if [[ ! -f exit.sh ]]; then
-    echo 'logout 1' >> exit.sh
-  fi
-  source exit.sh
+  sleep 3
+  kill -9 $PPID
 }
 
 settings2_pacman(){

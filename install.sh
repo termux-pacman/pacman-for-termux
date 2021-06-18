@@ -91,7 +91,7 @@ settings_pacman(){
      sed -i '1s+^+export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n+' $file
   fi
   if [[ -z "`grep 'ARGS="$ARGS -b /sys:/sys"' $chroot`" ]]; then
-    sed -i '35a+ARGS="$ARGS -b /sys:/sys"' $chroot
+    sed -i '35a\ARGS="$ARGS -b /sys:/sys"' $chroot
   fi
   if [[ -z "`grep termux-chroot $file`" ]]; then
     echo '' >> $file

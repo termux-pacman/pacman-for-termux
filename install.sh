@@ -91,7 +91,7 @@ settings_pacman(){
   fi
   etc=$PREFIX/etc
   rm $etc/profile
-  wget -P $etc/profile --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/profile
+  wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/profile
   
   info 'Reload termux.'
   sleep 3

@@ -85,28 +85,14 @@ settings_pacman(){
       ln -s $PREFIX/$i /data/data/com.termux/files/$i
     fi
   done
-  file=$PREFIX/etc/profile
   chroot=$PREFIX/bin/termux-chroot
-  if [[ -z "`grep 'export LD_LIBRARY_PATH' $file`" ]]; then
-     sed -i '1s+^+export LD_LIBRARY_PATH="/data/data/com.termux/files/usr/lib"\n+' $file
-  fi
   if [[ -z "`grep 'ARGS="$ARGS -b /sys:/sys"' $chroot`" ]]; then
     sed -i '35a\ARGS="$ARGS -b /sys:/sys"' $chroot
   fi
-  if [[ -z "`grep termux-chroot $file`" ]]; then
-    echo '' >> $file
-    echo 'if [ -z "$TERMUX_CHROOT" ]; then' >> $file
-    echo '  export TERMUX_CHROOT=1' >> $file
-    echo '  exec termux-chroot' >> $file
-    echo 'fi' >> $file
-    commet 'The setup is ready.'
-  else
-    commet 'Everything is set up already.'
-  fi
-  if [[ -z "`grep 'unset LD_PRELOAD' $file`" ]]; then
-    echo 'unset LD_PRELOAD' >> $file
-  fi
-
+  etc=$PREFIX/etc
+  rm $etc/profile
+  wget -P $etc/profile --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/profile
+  
   info 'Reload termux.'
   sleep 3
   kill -9 $PPID

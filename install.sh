@@ -69,10 +69,14 @@ settings_pacman(){
   wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
   pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
   rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-  sed -i 's/#this//' $PREFIX/etc/pacman.conf
-  sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $PREFIX/etc/pacman.conf
-  if [[ "`uname -m`" == "armv7l" ]]; then
-    sed -i 's/Architecture = auto/Architecture = armv7h/' $PREFIX/etc/pacman.conf
+  conf=$PREFIX/etc/pacman.conf
+  sed -i 's/#this//' $conf
+  sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
+  un="`uname -m`"
+  if [[ $un == "armv6l" ]]; then
+    sed -i 's/Architecture = auto/Architecture = armv6h/' $conf
+  elif [[ $un == "armv7l" ]]; then
+    sed -i 's/Architecture = auto/Architecture = armv7h/' $conf
   fi
 
   info 'Run pacman.'

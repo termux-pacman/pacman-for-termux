@@ -103,6 +103,13 @@ settings_pacman(){
 }
 
 settings2_pacman(){
+  if [[ -z $1 || "$1" == "rem" ]]; then
+    info 'Removing deb packages.'
+    apt-get purge clang python -y
+    apt autoremove -y
+    pkg install libarchive -y
+  fi
+
   if [[ -z $1 || "$1" == "ins" ]]; then
     info 'Start the second part of the setup.'
     if [[ ! -d /bin || ! -d /lib ]]; then
@@ -115,13 +122,6 @@ settings2_pacman(){
     pacman-key --init
     pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always #archlinux-keyring
     pacman-key --populate
-  fi
-
-  if [[ -z $1 || "$1" == "rem" ]]; then
-    info 'Removing deb packages.'
-    apt-get purge clang python -y
-    apt autoremove -y
-    pkg install libarchive -y
   fi
 }
 
@@ -140,8 +140,8 @@ if [[ "$1" == "help" ]]; then
   commet '    ins[auto] - run make install'
   commet '  set[auto] - setting up pacman.'
   commet '  set2 - second part of pacman setup (only run after termux reboot).'
-  commet '    ins[auto] - installing arch packages.'
   commet '    rem[auto] - removing deb packages.'
+  commet '    ins[auto] - installing arch packages.'
   commet '  test - сompiling pacman for a test.'
 elif [[ "$1" == "test" ]]; then
   install_pacman "conf"

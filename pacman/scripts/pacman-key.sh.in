@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   pacman-key - manages pacman's keyring
 #                Based on apt-key, from Debian

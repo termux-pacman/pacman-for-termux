@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/data/data/com.termux/files/usr/bin/perl
 #   makepkg-template - template system for makepkg
 #   @configure_input@
 #

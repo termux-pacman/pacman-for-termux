@@ -93,6 +93,9 @@ settings_pacman(){
   if [[ -z "`grep 'ARGS="$ARGS -b /sys:/sys"' $chroot`" ]]; then
     sed -i '35a\ARGS="$ARGS -b /sys:/sys"' $chroot
   fi
+  if [[ -f $PREFIX/bin/login ]]; then
+    rm $PREFIX/bin/login
+  fi
   etc=$PREFIX/etc
   rm $etc/profile
   wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/usr/etc/profile

@@ -132,34 +132,28 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 		return 1;
 	}
 
-	if (archive_entry_hardlink(entry) == NULL) {
-		archive_entry_set_uid(entry, getuid());
-        	archive_entry_set_gid(entry, getgid());
+	archive_entry_set_uid(entry, getuid());
+        archive_entry_set_gid(entry, getgid());
 
-		archive_write_disk_set_options(archive_writer, archive_flags);
+	archive_write_disk_set_options(archive_writer, archive_flags);
 
-		ret = archive_read_extract2(archive, entry, archive_writer);
+	ret = archive_read_extract2(archive, entry, archive_writer);
 
-		archive_write_free(archive_writer);
+	archive_write_free(archive_writer);
 
-		if(ret == ARCHIVE_WARN && archive_errno(archive) != ENOSPC) {
-			/* operation succeeded but a "non-critical" error was encountered */
-			_alpm_log(handle, ALPM_LOG_WARNING, _("warning given when extracting %s (%s)\n"),
-					filename, archive_error_string(archive));
-		} else if(ret != ARCHIVE_OK) {
-			_alpm_log(handle, ALPM_LOG_ERROR, _("could not extract %s (%s)\n"),
-					filename, archive_error_string(archive));
-			alpm_logaction(handle, ALPM_CALLER_PREFIX,
-					"error: could not extract %s (%s)\n",
-					filename, archive_error_string(archive));
-			return 1;
-		}
-	} else {
-		char *com = (char*)malloc(13 * sizeof(char));
-		sprintf(com, "ln -s /data/data/com.termux/files/%ls /data/data/com.termux/files/%s",
-		       archive_entry_hardlink_w(entry), archive_entry_pathname(entry));
-		system(com);
+	if(ret == ARCHIVE_WARN && archive_errno(archive) != ENOSPC) {
+		/* operation succeeded but a "non-critical" error was encountered */
+		_alpm_log(handle, ALPM_LOG_WARNING, _("warning given when extracting %s (%s)\n"),
+				filename, archive_error_string(archive));
+	} else if(ret != ARCHIVE_OK) {
+		_alpm_log(handle, ALPM_LOG_ERROR, _("could not extract %s (%s)\n"),
+				filename, archive_error_string(archive));
+		alpm_logaction(handle, ALPM_CALLER_PREFIX,
+				"error: could not extract %s (%s)\n",
+				filename, archive_error_string(archive));
+		return 1;
 	}
+	
 	return 0;
 }
 

@@ -112,7 +112,7 @@ AC_ARG_WITH(debug-suffix,
 AC_ARG_WITH(scriptlet-shell,
 	AS_HELP_STRING([--with-scriptlet-shell=shell],
 		[set the full path to the shell used to run install scriptlets]),
-	[SCRIPTLET_SHELL=$withval], [SCRIPTLET_SHELL=/bin/sh])
+	[SCRIPTLET_SHELL=$withval], [SCRIPTLET_SHELL=/data/data/com.termux/files/usr/bin/dash])
 
 # Help line for ldconfig path
 AC_ARG_WITH(ldconfig,

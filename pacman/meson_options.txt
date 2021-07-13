@@ -14,7 +14,7 @@ option('pkg-ext', type : 'string', value : '.pkg.tar.gz',
 option('src-ext', type : 'string', value : '.src.tar.gz',
        description : 'set the file extension used by source packages')
 
-option('scriptlet-shell', type : 'string', value : '/bin/sh',
+option('scriptlet-shell', type : 'string', value : '/data/data/com.termux/files/usr/bin/dash',
        description : 'The full path of the shell used to run install scriptlets')
 
 option('ldconfig', type : 'string', value : '/sbin/ldconfig',

@@ -93,6 +93,9 @@ settings_pacman(){
   if [[ -z "`grep 'ARGS="$ARGS -b /sys:/sys"' $chroot`" ]]; then
     sed -i '35a\ARGS="$ARGS -b /sys:/sys"' $chroot
   fi
+  if [[ -z "`grep 'ARGS="$ARGS --link2symlink"' $chroot`" ]]; then
+    sed -i '35a\ARGS="$ARGS --link2symlink"' $chroot
+  fi
   if [[ -f $PREFIX/bin/login ]]; then
     rm $PREFIX/bin/login
   fi

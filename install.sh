@@ -73,9 +73,7 @@ settings_pacman(){
   sed -i 's/#this//' $conf
   sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
   un="`uname -m`"
-  if [[ $un == "armv6l" ]]; then
-    sed -i 's/Architecture = auto/Architecture = armv6h/' $conf
-  elif [[ $un == "armv7l" ]]; then
+  if [[ $un == "armv7l" ]]; then
     sed -i 's/Architecture = auto/Architecture = armv7h/' $conf
   fi
 

@@ -132,6 +132,9 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 		return 1;
 	}
 
+	archive_entry_set_uid(entry, getuid());
+	archive_entry_set_gid(entry, getgid());
+
 	archive_write_disk_set_options(archive_writer, archive_flags);
 
 	ret = archive_read_extract2(archive, entry, archive_writer);

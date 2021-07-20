@@ -459,24 +459,30 @@ void cb_question(void *ctx, alpm_question_t *question)
 		case ALPM_QUESTION_INSTALL_IGNOREPKG:
 			{
 				alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
-				char * type = (char*)malloc(13 * sizeof(char));
-        			for (int i = 0; 1; i++) {
-                			sprintf(type, "%d", ((char**)&list_pack)[i]);
-                			if (strcmp(type, "0") != 0) {
-                        			if (((char**)&list_pack)[i] == alpm_pkg_get_name(q->pkg)){
-                                			printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
-                                                        	alpm_pkg_get_name(q->pkg));
-                                			q->install = 0;
-                        			} else if(!config->op_s_downloadonly) {
-							q->install = yesno(_("%s is in IgnorePkg/IgnoreGroup. Install anyway?"),
+                        	if(!config->op_s_downloadonly) {
+					char * type = (char*)malloc(13 * sizeof(char));
+					int itog = 1;
+					for (int i = 0; 1; i++) {
+						sprintf(type, "%d", ((char**)&list_pack)[i]);
+						if (strcmp(type, "0") != 0) {
+            						if (((char**)&list_pack)[i] == alpm_pkg_get_name(q->pkg)){
+								printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
+										alpm_pkg_get_name(q->pkg));
+								q->install = 0;
+								itog = 0;
+								break;
+            						}
+        					} else {
+            						break;
+        					}
+					}
+					if (itog == 1) {
+						q->install = yesno(_("%s is in IgnorePkg/IgnoreGroup. Install anyway?"),
                                                         		alpm_pkg_get_name(q->pkg));
-						} else {
-							q->install = 1;
-						}
-                			} else {
-                        			break;
-                			}
-        			}
+					}
+				} else {
+					q->install = 1;
+				}
 			}
 			break;
 		case ALPM_QUESTION_REPLACE_PKG:

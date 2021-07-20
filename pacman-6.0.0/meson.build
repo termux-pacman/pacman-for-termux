@@ -76,15 +76,6 @@ conf.set_quoted('HOOKDIR', join_paths(SYSCONFDIR, 'pacman.d/hooks/'))
 conf.set_quoted('ROOTDIR', ROOTDIR)
 
 libintl = dependency('', required: false)
-if get_option('i18n')
-  if not cc.has_function('ngettext')
-    libintl = cc.find_library('intl', required : false, static: get_option('buildstatic'))
-    if not libintl.found()
-      error('ngettext not found but NLS support requested')
-    endif
-  endif
-  conf.set('ENABLE_NLS', 1)
-endif
 
 # dependencies
 libarchive = dependency('libarchive',

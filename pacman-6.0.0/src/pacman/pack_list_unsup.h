@@ -14,7 +14,8 @@ char * p9;
 char * p10;
 char * p11;
 char * p12;
-char * p13
+char * p13;
+char * p14;
 };
 
 struct str_pac list_pack = {
@@ -32,5 +33,6 @@ struct str_pac list_pack = {
 "ncurses",
 "openssl",
 "xz",
-"zlib"
+"zlib",
+fakeroot""
 };

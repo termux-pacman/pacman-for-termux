@@ -252,7 +252,7 @@ run_pacman() {
 			done
 		done
 	fi
-	"${cmd[@]}"
+	bsl "${cmd[@]}"
 }
 
 check_deps() {

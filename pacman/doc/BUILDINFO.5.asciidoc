@@ -1,6 +1,3 @@
-/////
-vim:set ts=4 sw=4 syntax=asciidoc noet spell spelllang=en_us:
-/////
 BUILDINFO(5)
 ============
 
@@ -52,6 +49,9 @@ BUILDINFO file format.
 
 *builddir*::
 	The directory where the package was built.
+
+*startdir*::
+	The directory from which makepkg was executed.
 
 *buildenv (array)*::
 	The build environment specified in makepkg.conf.

@@ -1,7 +1,7 @@
 /*
  *  signing.c
  *
- *  Copyright (c) 2008-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2008-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,14 +34,6 @@
 #include "log.h"
 #include "alpm.h"
 #include "handle.h"
-
-/**
- * Decode a loaded signature in base64 form.
- * @param base64_data the signature to attempt to decode
- * @param data the decoded data; must be freed by the caller
- * @param data_len the length of the returned data
- * @return 0 on success, -1 on failure to properly decode
- */
 
 int SYMEXPORT alpm_decode_signature(const char *base64_data,
 		unsigned char **data, size_t *data_len)
@@ -217,7 +209,7 @@ gpg_error:
 int _alpm_key_in_keychain(alpm_handle_t *handle, const char *fpr)
 {
 	gpgme_error_t gpg_err;
-	gpgme_ctx_t ctx;
+	gpgme_ctx_t ctx = {0};
 	gpgme_key_t key;
 	int ret = -1;
 
@@ -231,7 +223,6 @@ int _alpm_key_in_keychain(alpm_handle_t *handle, const char *fpr)
 		goto error;
 	}
 
-	memset(&ctx, 0, sizeof(ctx));
 	gpg_err = gpgme_new(&ctx);
 	CHECK_ERR();
 
@@ -267,12 +258,11 @@ error:
 static int key_import_wkd(alpm_handle_t *handle, const char *email)
 {
 	gpgme_error_t gpg_err;
-	gpgme_ctx_t ctx;
+	gpgme_ctx_t ctx = {0};
 	gpgme_keylist_mode_t mode;
 	gpgme_key_t key;
 	int ret = -1;
 
-	memset(&ctx, 0, sizeof(ctx));
 	gpg_err = gpgme_new(&ctx);
 	CHECK_ERR();
 
@@ -309,7 +299,7 @@ static int key_search_keyserver(alpm_handle_t *handle, const char *fpr,
 		alpm_pgpkey_t *pgpkey)
 {
 	gpgme_error_t gpg_err;
-	gpgme_ctx_t ctx;
+	gpgme_ctx_t ctx = {0};
 	gpgme_keylist_mode_t mode;
 	gpgme_key_t key;
 	int ret = -1;
@@ -322,7 +312,6 @@ static int key_search_keyserver(alpm_handle_t *handle, const char *fpr,
 	MALLOC(full_fpr, fpr_len + 3, RET_ERR(handle, ALPM_ERR_MEMORY, -1));
 	sprintf(full_fpr, "0x%s", fpr);
 
-	memset(&ctx, 0, sizeof(ctx));
 	gpg_err = gpgme_new(&ctx);
 	CHECK_ERR();
 
@@ -431,7 +420,7 @@ gpg_error:
 static int key_import_keyserver(alpm_handle_t *handle, alpm_pgpkey_t *key)
 {
 	gpgme_error_t gpg_err;
-	gpgme_ctx_t ctx;
+	gpgme_ctx_t ctx = {0};
 	gpgme_key_t keys[2];
 	gpgme_import_result_t result;
 	int ret = -1;
@@ -442,7 +431,6 @@ static int key_import_keyserver(alpm_handle_t *handle, alpm_pgpkey_t *key)
 		return -1;
 	}
 
-	memset(&ctx, 0, sizeof(ctx));
 	gpg_err = gpgme_new(&ctx);
 	CHECK_ERR();
 
@@ -507,7 +495,7 @@ static int email_from_uid(const char *uid, char **email)
 int _alpm_key_import(alpm_handle_t *handle, const char *uid, const char *fpr)
 {
 	int ret = -1;
-	alpm_pgpkey_t fetch_key;
+	alpm_pgpkey_t fetch_key = {0};
 	char *email;
 
 	if(_alpm_access(handle, handle->gpgdir, "pubring.gpg", W_OK)) {
@@ -516,9 +504,8 @@ int _alpm_key_import(alpm_handle_t *handle, const char *uid, const char *fpr)
 		return -1;
 	}
 
-	memset(&fetch_key, 0, sizeof(fetch_key));
 	STRDUP(fetch_key.uid, uid, return -1);
-	STRDUP(fetch_key.fingerprint, fpr, return -1);
+	STRDUP(fetch_key.fingerprint, fpr, free(fetch_key.uid); return -1);
 
 	alpm_question_import_key_t question = {
 				.type = ALPM_QUESTION_IMPORT_KEY,
@@ -530,6 +517,7 @@ int _alpm_key_import(alpm_handle_t *handle, const char *uid, const char *fpr)
 		/* Try to import the key from a WKD first */
 		if(email_from_uid(uid, &email) == 0) {
 			ret = key_import_wkd(handle, email);
+			free(email);
 		}
 
 		/* If importing from the WKD fails, fall back to keyserver lookup */
@@ -550,6 +538,8 @@ int _alpm_key_import(alpm_handle_t *handle, const char *uid, const char *fpr)
 		}
 	}
 	gpgme_key_unref(fetch_key.data);
+	free(fetch_key.uid);
+	free(fetch_key.fingerprint);
 
 	return ret;
 }
@@ -576,8 +566,8 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 {
 	int ret = -1, sigcount;
 	gpgme_error_t gpg_err = 0;
-	gpgme_ctx_t ctx;
-	gpgme_data_t filedata, sigdata;
+	gpgme_ctx_t ctx = {0};
+	gpgme_data_t filedata = {0}, sigdata = {0};
 	gpgme_verify_result_t verify_result;
 	gpgme_signature_t gpgsig;
 	char *sigpath = NULL;
@@ -599,16 +589,14 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 				|| (sigfile = fopen(sigpath, "rb")) == NULL) {
 			_alpm_log(handle, ALPM_LOG_DEBUG, "sig path %s could not be opened\n",
 					sigpath);
-			handle->pm_errno = ALPM_ERR_SIG_MISSING;
-			goto error;
+			GOTO_ERR(handle, ALPM_ERR_SIG_MISSING, error);
 		}
 	}
 
 	/* does the file we are verifying exist? */
 	file = fopen(path, "rb");
 	if(file == NULL) {
-		handle->pm_errno = ALPM_ERR_NOT_A_FILE;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_NOT_A_FILE, error);
 	}
 
 	if(init_gpgme(handle)) {
@@ -617,10 +605,6 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 	}
 
 	_alpm_log(handle, ALPM_LOG_DEBUG, "checking signature for %s\n", path);
-
-	memset(&ctx, 0, sizeof(ctx));
-	memset(&sigdata, 0, sizeof(sigdata));
-	memset(&filedata, 0, sizeof(filedata));
 
 	gpg_err = gpgme_new(&ctx);
 	CHECK_ERR();
@@ -636,8 +620,7 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 		int decode_ret = alpm_decode_signature(base64_sig,
 				&decoded_sigdata, &data_len);
 		if(decode_ret) {
-			handle->pm_errno = ALPM_ERR_SIG_INVALID;
-			goto gpg_error;
+			GOTO_ERR(handle, ALPM_ERR_SIG_INVALID, error);
 		}
 		gpg_err = gpgme_data_new_from_mem(&sigdata,
 				(char *)decoded_sigdata, data_len, 0);
@@ -654,15 +637,14 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 	CHECK_ERR();
 	if(!verify_result || !verify_result->signatures) {
 		_alpm_log(handle, ALPM_LOG_DEBUG, "no signatures returned\n");
-		handle->pm_errno = ALPM_ERR_SIG_MISSING;
-		goto gpg_error;
+		GOTO_ERR(handle, ALPM_ERR_SIG_MISSING, gpg_error);
 	}
 	for(gpgsig = verify_result->signatures, sigcount = 0;
 			gpgsig; gpgsig = gpgsig->next, sigcount++);
 	_alpm_log(handle, ALPM_LOG_DEBUG, "%d signatures returned\n", sigcount);
 
 	CALLOC(siglist->results, sigcount, sizeof(alpm_sigresult_t),
-			handle->pm_errno = ALPM_ERR_MEMORY; goto gpg_error);
+			GOTO_ERR(handle, ALPM_ERR_MEMORY, gpg_error));
 	siglist->count = sigcount;
 
 	for(gpgsig = verify_result->signatures, sigcount = 0; gpgsig;
@@ -699,7 +681,7 @@ int _alpm_gpgme_checksig(alpm_handle_t *handle, const char *path,
 			gpg_err = GPG_ERR_NO_ERROR;
 			/* we dupe the fpr in this case since we have no key to point at */
 			STRDUP(result->key.fingerprint, gpgsig->fpr,
-					handle->pm_errno = ALPM_ERR_MEMORY; goto gpg_error);
+					GOTO_ERR(handle, ALPM_ERR_MEMORY, gpg_error));
 		} else {
 			CHECK_ERR();
 			if(key->uids) {
@@ -1008,12 +990,6 @@ int _alpm_process_siglist(alpm_handle_t *handle, const char *identifier,
 	return retry;
 }
 
-/**
- * Check the PGP signature for the given package file.
- * @param pkg the package to check
- * @param siglist a pointer to storage for signature results
- * @return a int value : 0 (valid), 1 (invalid), -1 (an error occurred)
- */
 int SYMEXPORT alpm_pkg_check_pgp_signature(alpm_pkg_t *pkg,
 		alpm_siglist_t *siglist)
 {
@@ -1025,12 +1001,6 @@ int SYMEXPORT alpm_pkg_check_pgp_signature(alpm_pkg_t *pkg,
 			pkg->base64_sig, siglist);
 }
 
-/**
- * Check the PGP signature for the given database.
- * @param db the database to check
- * @param siglist a pointer to storage for signature results
- * @return a int value : 0 (valid), 1 (invalid), -1 (an error occurred)
- */
 int SYMEXPORT alpm_db_check_pgp_signature(alpm_db_t *db,
 		alpm_siglist_t *siglist)
 {
@@ -1041,13 +1011,6 @@ int SYMEXPORT alpm_db_check_pgp_signature(alpm_db_t *db,
 	return _alpm_gpgme_checksig(db->handle, _alpm_db_path(db), NULL, siglist);
 }
 
-/**
- * Clean up and free a signature result list.
- * Note that this does not free the siglist object itself in case that
- * was allocated on the stack; this is the responsibility of the caller.
- * @param siglist a pointer to storage for signature results
- * @return 0 on success, -1 on error
- */
 int SYMEXPORT alpm_siglist_cleanup(alpm_siglist_t *siglist)
 {
 	ASSERT(siglist != NULL, return -1);
@@ -1128,13 +1091,6 @@ static int parse_subpacket(alpm_handle_t *handle, const char *identifier,
 		return 0;
 }
 
-/**
- * Extract the Issuer Key ID from a signature
- * @param sig PGP signature
- * @param len length of signature
- * @param keys a pointer to storage for key IDs
- * @return 0 on success, -1 on error
- */
 int SYMEXPORT alpm_extract_keyid(alpm_handle_t *handle, const char *identifier,
 		const unsigned char *sig, const size_t len, alpm_list_t **keys)
 {

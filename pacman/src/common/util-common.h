@@ -1,7 +1,7 @@
 /*
  *  util-common.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <sys/stat.h> /* struct stat */
 
+char *hex_representation(const unsigned char *bytes, size_t size);
 const char *mbasename(const char *path);
 char *mdirname(const char *path);
 

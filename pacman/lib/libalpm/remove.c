@@ -1,7 +1,7 @@
 /*
  *  remove.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -46,14 +46,6 @@
 #include "handle.h"
 #include "filelist.h"
 
-/**
- * @brief Add a package removal action to the transaction.
- *
- * @param handle the context handle
- * @param pkg the package to uninstall
- *
- * @return 0 on success, -1 on error
- */
 int SYMEXPORT alpm_remove_pkg(alpm_handle_t *handle, alpm_pkg_t *pkg)
 {
 	const char *pkgname;

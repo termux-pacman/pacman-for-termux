@@ -1,7 +1,7 @@
 /*
  *  add.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,7 +47,6 @@
 #include "remove.h"
 #include "handle.h"
 
-/** Add a package to the transaction. */
 int SYMEXPORT alpm_add_pkg(alpm_handle_t *handle, alpm_pkg_t *pkg)
 {
 	const char *pkgname, *pkgver;
@@ -120,6 +119,7 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 	                          ARCHIVE_EXTRACT_PERM |
 	                          ARCHIVE_EXTRACT_TIME |
 	                          ARCHIVE_EXTRACT_UNLINK |
+	                          ARCHIVE_EXTRACT_XATTR |
 	                          ARCHIVE_EXTRACT_SECURE_SYMLINKS;
 
 	archive_entry_set_pathname(entry, filename);
@@ -133,7 +133,7 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 	}
 
 	archive_entry_set_uid(entry, getuid());
-        archive_entry_set_gid(entry, getgid());
+	archive_entry_set_gid(entry, getgid());
 
 	archive_write_disk_set_options(archive_writer, archive_flags);
 
@@ -153,7 +153,6 @@ static int perform_extraction(alpm_handle_t *handle, struct archive *archive,
 				filename, archive_error_string(archive));
 		return 1;
 	}
-	
 	return 0;
 }
 
@@ -491,8 +490,7 @@ static int commit_single_pkg(alpm_handle_t *handle, alpm_pkg_t *newpkg,
 		/* set up fake remove transaction */
 		if(_alpm_remove_single_package(handle, oldpkg, newpkg, 0, 0) == -1) {
 			handle->pm_errno = ALPM_ERR_TRANS_ABORT;
-			ret = -1;
-			goto cleanup;
+			return -1;
 		}
 	}
 
@@ -503,15 +501,13 @@ static int commit_single_pkg(alpm_handle_t *handle, alpm_pkg_t *newpkg,
 				"error: could not create database entry %s-%s\n",
 				newpkg->name, newpkg->version);
 		handle->pm_errno = ALPM_ERR_DB_WRITE;
-		ret = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	fd = _alpm_open_archive(db->handle, pkgfile, &buf,
 			&archive, ALPM_ERR_PKG_OPEN);
 	if(fd < 0) {
-		ret = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	/* save the cwd so we can restore it later */
@@ -529,8 +525,7 @@ static int commit_single_pkg(alpm_handle_t *handle, alpm_pkg_t *newpkg,
 			close(cwdfd);
 		}
 		close(fd);
-		ret = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	if(trans->flags & ALPM_TRANS_FLAG_DBONLY) {
@@ -614,8 +609,7 @@ static int commit_single_pkg(alpm_handle_t *handle, alpm_pkg_t *newpkg,
 				"error: could not update database entry %s-%s\n",
 				newpkg->name, newpkg->version);
 		handle->pm_errno = ALPM_ERR_DB_WRITE;
-		ret = -1;
-		goto cleanup;
+		return -1;
 	}
 
 	if(_alpm_db_add_pkgincache(db, newpkg) == -1) {
@@ -661,7 +655,6 @@ static int commit_single_pkg(alpm_handle_t *handle, alpm_pkg_t *newpkg,
 	event.type = ALPM_EVENT_PACKAGE_OPERATION_DONE;
 	EVENT(handle, &event);
 
-cleanup:
 	return ret;
 }
 

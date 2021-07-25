@@ -1,16 +1,16 @@
 project('pacman',
         'c',
-        version : '5.2.2',
+        version : '6.0.0',
         license : 'GPLv2+',
         default_options : [
           'c_std=gnu99',
-          'prefix=/usr',
-          'sysconfdir=/etc',
-          'localstatedir=/var',
+          'prefix=/data/data/com.termux/files/usr',
+          'sysconfdir=/data/data/com.termux/files/usr/etc',
+          'localstatedir=/data/data/com.termux/files/usr/var',
         ],
         meson_version : '>= 0.51')
 
-libalpm_version = '12.0.2'
+libalpm_version = '13.0.0'
 
 cc = meson.get_compiler('c')
 
@@ -28,12 +28,8 @@ LIBMAKEPKGDIR = join_paths(PREFIX, DATAROOTDIR, 'makepkg')
 PKGDATADIR = join_paths(PREFIX, DATAROOTDIR, meson.project_name())
 
 PYTHON = import('python').find_installation('python3')
-M4 = find_program('m4')
-SED = find_program('sed')
-DU = find_program('du')
 LDCONFIG = get_option('ldconfig')
 MESON_MAKE_SYMLINK = join_paths(meson.source_root(), 'build-aux/meson-make-symlink.sh')
-MESON_INSTALL_SCRIPT = join_paths(meson.source_root(), 'build-aux/meson-install-script.sh')
 
 BASH = find_program('bash4', 'bash')
 if BASH.found()
@@ -79,12 +75,7 @@ conf.set_quoted('CACHEDIR', join_paths(LOCALSTATEDIR, 'cache/pacman/pkg/'))
 conf.set_quoted('HOOKDIR', join_paths(SYSCONFDIR, 'pacman.d/hooks/'))
 conf.set_quoted('ROOTDIR', ROOTDIR)
 
-if get_option('i18n')
-  if not cc.has_function('ngettext')
-    error('ngettext not found but NLS support requested')
-  endif
-  conf.set('ENABLE_NLS', 1)
-endif
+libintl = dependency('', required: false)
 
 # dependencies
 libarchive = dependency('libarchive',
@@ -92,7 +83,7 @@ libarchive = dependency('libarchive',
                         static : get_option('buildstatic'))
 
 libcurl = dependency('libcurl',
-                     version : '>=7.32.0',
+                     version : '>=7.55.0',
                      required : get_option('curl'),
                      static : get_option('buildstatic'))
 conf.set('HAVE_LIBCURL', libcurl.found())
@@ -145,7 +136,9 @@ foreach sym : [
     'tcflush',
   ]
   have = cc.has_function(sym, args : '-D_GNU_SOURCE')
-  conf.set10('HAVE_' + sym.to_upper(), have)
+  if have
+    conf.set10('HAVE_' + sym.to_upper(), have)
+  endif
 endforeach
 
 foreach member : [
@@ -179,7 +172,7 @@ elif conf.has('HAVE_STRUCT_STATFS_F_FLAGS')
   conf.set('FSSTATSTYPE', 'struct statfs')
 endif
 
-if get_option('buildtype').startswith('debug')
+if get_option('debug')
   extra_cflags = [
     '-Wcast-align',
     '-Wclobbered',
@@ -221,7 +214,6 @@ config_h = configure_file(
 add_project_arguments('-include', 'config.h', language : 'c')
 
 filecmd = 'file'
-default_sedinplaceflags = ' --follow-symlinks -i'
 inodecmd = 'stat -c \'%i %n\''
 strip_binaries = '--strip-all'
 strip_shared = '--strip-unneeded'
@@ -237,18 +229,11 @@ endif
 os = host_machine.system()
 if os.startswith('darwin')
   inodecmd = '/usr/bin/stat -f \'%i %N\''
-  default_sedinplaceflags = ' -i \'\''
   strip_binaries = ''
   strip_shared = '-s'
   strip_static = '-s'
 elif os.contains('bsd') or os == 'dragonfly'
   inodecmd = 'stat -f \'%i %N\''
-  default_sedinplaceflags = ' -i \'\''
-endif
-
-sedinplaceflags = get_option('sedinplaceflags')
-if sedinplaceflags == 'auto'
-  sedinplaceflags = default_sedinplaceflags
 endif
 
 chost = run_command(cc, '-dumpmachine').stdout().strip()
@@ -257,8 +242,6 @@ carch = chost.split('-')[0]
 # annoyingly, we have to maintain two sets of configuration_data which is
 # largely identical, but which distinguishes between quoting needs.
 substs = configuration_data()
-substs.set('SED', SED.path())
-substs.set('M4', M4.path())
 substs.set('CARCH', carch)
 substs.set('CHOST', chost)
 substs.set('PKGEXT', get_option('pkg-ext'))
@@ -277,8 +260,6 @@ substs.set('TEMPLATE_DIR', get_option('makepkg-template-dir'))
 substs.set('DEBUGSUFFIX', get_option('debug-suffix'))
 substs.set('INODECMD', inodecmd)
 substs.set('FILECMD', filecmd)
-substs.set('SEDINPLACEFLAGS', sedinplaceflags)
-substs.set('SEDPATH', SED.path())
 substs.set('LIBMAKEPKGDIR', LIBMAKEPKGDIR)
 substs.set('STRIP_BINARIES', strip_binaries)
 substs.set('STRIP_SHARED', strip_shared)
@@ -312,9 +293,10 @@ libcommon = static_library(
   'common',
   libcommon_sources,
   include_directories : includes,
+  gnu_symbol_visibility : 'hidden',
   install : false)
 
-alpm_deps = [crypto_provider, libarchive, libcurl, gpgme]
+alpm_deps = [crypto_provider, libarchive, libcurl, libintl, gpgme]
 
 libalpm_a = static_library(
   'alpm_objlib',
@@ -322,12 +304,14 @@ libalpm_a = static_library(
   # https://github.com/mesonbuild/meson/issues/3937
   objects : libcommon.extract_all_objects(),
   include_directories : includes,
+  gnu_symbol_visibility : 'hidden',
   dependencies : alpm_deps)
 
 libalpm = library(
   'alpm',
   version : libalpm_version,
   objects: libalpm_a.extract_all_objects(recursive: true),
+  include_directories : includes,
   dependencies : alpm_deps,
   install : true)
 
@@ -341,7 +325,7 @@ pkgconfig.generate(
   name : 'libalpm',
   description : 'Arch Linux package management library',
   version : libalpm_version,
-  url : 'http://www.archlinux.org/pacman/')
+  url : 'http://archlinux.org/pacman/')
 
 pacman_bin = executable(
   'pacman',
@@ -356,7 +340,7 @@ executable(
   'pacman-conf',
   pacman_conf_sources,
   include_directories : includes,
-  link_with : [libalpm],
+  link_with : [libalpm, libcommon],
   dependencies : [libarchive],
   install : true,
 )
@@ -377,6 +361,21 @@ executable(
   link_with : [libalpm_a],
   install : true,
 )
+
+foreach wrapper : script_wrappers
+  cdata = configuration_data()
+  cdata.set_quoted('BASH', BASH.path())
+  cdata.set_quoted('BUILDDIR', wrapper[2])
+  cdata.set_quoted('REAL_PROGPATH', wrapper[1].full_path())
+
+  # Create a wrapper script that bootstraps the real script within the build
+  # directory. Use configure_file instead of a custom_target to ensure that
+  # permissions on the input script wrapper are preserved.
+  configure_file(
+    input : join_paths(meson.source_root(), 'build-aux', 'script-wrapper.sh.in'),
+    output : wrapper[0],
+    configuration : cdata)
+endforeach
 
 configure_file(
   input : 'etc/makepkg.conf.in',
@@ -430,7 +429,6 @@ message('\n    '.join([
   '   Architecture            : @0@'.format(carch),
   '   Host Type               : @0@'.format(chost),
   '   File inode command      : @0@'.format(inodecmd),
-  '   In-place sed command    : @0@ @1@'.format(SED.path(), sedinplaceflags),
   '   File seccomp command    : @0@'.format(filecmd),
   '   libalpm version         : @0@'.format(libalpm_version),
   '   pacman version          : @0@'.format(PACKAGE_VERSION),

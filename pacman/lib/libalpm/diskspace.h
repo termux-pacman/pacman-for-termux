@@ -1,7 +1,7 @@
 /*
  *  diskspace.h
  *
- *  Copyright (c) 2010-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2010-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,6 +58,6 @@ typedef struct __alpm_mountpoint_t {
 
 int _alpm_check_diskspace(alpm_handle_t *handle);
 int _alpm_check_downloadspace(alpm_handle_t *handle, const char *cachedir,
-		size_t num_files, off_t *file_sizes);
+		size_t num_files, const off_t *file_sizes);
 
 #endif /* ALPM_DISKSPACE_H */

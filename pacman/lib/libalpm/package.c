@@ -1,7 +1,7 @@
 /*
  *  package.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005, 2006 by Christian Hamar <krics@linuxforum.hu>
@@ -34,12 +34,6 @@
 #include "handle.h"
 #include "deps.h"
 
-/** \addtogroup alpm_packages Package Functions
- * @brief Functions to manipulate libalpm packages
- * @{
- */
-
-/** Free a package. */
 int SYMEXPORT alpm_pkg_free(alpm_pkg_t *pkg)
 {
 	ASSERT(pkg != NULL, return -1);
@@ -52,7 +46,6 @@ int SYMEXPORT alpm_pkg_free(alpm_pkg_t *pkg)
 	return 0;
 }
 
-/** Check the integrity (with md5) of a package from the sync cache. */
 int SYMEXPORT alpm_pkg_checkmd5sum(alpm_pkg_t *pkg)
 {
 	char *fpath;
@@ -145,7 +138,7 @@ static int _pkg_force_load(alpm_pkg_t UNUSED *pkg) { return 0; }
 /** The standard package operations struct. Get fields directly from the
  * struct itself with no abstraction layer or any type of lazy loading.
  */
-struct pkg_operations default_pkg_ops = {
+const struct pkg_operations default_pkg_ops = {
 	.get_base        = _pkg_get_base,
 	.get_desc        = _pkg_get_desc,
 	.get_url         = _pkg_get_url,
@@ -275,6 +268,44 @@ const char SYMEXPORT *alpm_pkg_get_base64_sig(alpm_pkg_t *pkg)
 	return pkg->base64_sig;
 }
 
+int SYMEXPORT alpm_pkg_get_sig(alpm_pkg_t *pkg, unsigned char **sig, size_t *sig_len)
+{
+	ASSERT(pkg != NULL, return -1);
+
+	if(pkg->base64_sig) {
+		int ret = alpm_decode_signature(pkg->base64_sig, sig, sig_len);
+		if(ret != 0) {
+			RET_ERR(pkg->handle, ALPM_ERR_SIG_INVALID, -1);
+		}
+		return 0;
+	} else {
+		char *pkgpath = NULL, *sigpath = NULL;
+		alpm_errno_t err;
+		int ret = -1;
+
+		pkgpath = _alpm_filecache_find(pkg->handle, pkg->filename);
+		if(!pkgpath) {
+			GOTO_ERR(pkg->handle, ALPM_ERR_PKG_NOT_FOUND, cleanup);
+		}
+		sigpath = _alpm_sigpath(pkg->handle, pkgpath);
+		if(!sigpath || _alpm_access(pkg->handle, NULL, sigpath, R_OK)) {
+			GOTO_ERR(pkg->handle, ALPM_ERR_SIG_MISSING, cleanup);
+		}
+		err = _alpm_read_file(sigpath, sig, sig_len);
+		if(err == ALPM_ERR_OK) {
+			_alpm_log(pkg->handle, ALPM_LOG_DEBUG, "found detached signature %s with size %ld\n",
+				sigpath, *sig_len);
+		} else {
+			GOTO_ERR(pkg->handle, err, cleanup);
+		}
+		ret = 0;
+cleanup:
+		FREE(pkgpath);
+		FREE(sigpath);
+		return ret;
+	}
+}
+
 const char SYMEXPORT *alpm_pkg_get_arch(alpm_pkg_t *pkg)
 {
 	ASSERT(pkg != NULL, return NULL);
@@ -397,7 +428,6 @@ alpm_db_t SYMEXPORT *alpm_pkg_get_db(alpm_pkg_t *pkg)
 	return pkg->origin_data.db;
 }
 
-/** Open a package changelog for reading. */
 void SYMEXPORT *alpm_pkg_changelog_open(alpm_pkg_t *pkg)
 {
 	ASSERT(pkg != NULL, return NULL);
@@ -405,7 +435,6 @@ void SYMEXPORT *alpm_pkg_changelog_open(alpm_pkg_t *pkg)
 	return pkg->ops->changelog_open(pkg);
 }
 
-/** Read data from an open changelog 'file stream'. */
 size_t SYMEXPORT alpm_pkg_changelog_read(void *ptr, size_t size,
 		const alpm_pkg_t *pkg, void *fp)
 {
@@ -414,7 +443,6 @@ size_t SYMEXPORT alpm_pkg_changelog_read(void *ptr, size_t size,
 	return pkg->ops->changelog_read(ptr, size, pkg, fp);
 }
 
-/** Close a package changelog for reading. */
 int SYMEXPORT alpm_pkg_changelog_close(const alpm_pkg_t *pkg, void *fp)
 {
 	ASSERT(pkg != NULL, return -1);
@@ -422,7 +450,6 @@ int SYMEXPORT alpm_pkg_changelog_close(const alpm_pkg_t *pkg, void *fp)
 	return pkg->ops->changelog_close(pkg, fp);
 }
 
-/** Open a package mtree file for reading. */
 struct archive SYMEXPORT *alpm_pkg_mtree_open(alpm_pkg_t * pkg)
 {
 	ASSERT(pkg != NULL, return NULL);
@@ -430,7 +457,6 @@ struct archive SYMEXPORT *alpm_pkg_mtree_open(alpm_pkg_t * pkg)
 	return pkg->ops->mtree_open(pkg);
 }
 
-/** Read entry from an open mtree file. */
 int SYMEXPORT alpm_pkg_mtree_next(const alpm_pkg_t * pkg, struct archive *archive,
 	struct archive_entry **entry)
 {
@@ -439,7 +465,6 @@ int SYMEXPORT alpm_pkg_mtree_next(const alpm_pkg_t * pkg, struct archive *archiv
 	return pkg->ops->mtree_next(pkg, archive, entry);
 }
 
-/** Close a package mtree file for reading. */
 int SYMEXPORT alpm_pkg_mtree_close(const alpm_pkg_t * pkg, struct archive *archive)
 {
 	ASSERT(pkg != NULL, return -1);
@@ -510,20 +535,15 @@ static alpm_list_t *compute_requiredby(alpm_pkg_t *pkg, int optional)
 	return reqs;
 }
 
-/** Compute the packages requiring a given package. */
 alpm_list_t SYMEXPORT *alpm_pkg_compute_requiredby(alpm_pkg_t *pkg)
 {
 	return compute_requiredby(pkg, 0);
 }
 
-/** Compute the packages optionally requiring a given package. */
 alpm_list_t SYMEXPORT *alpm_pkg_compute_optionalfor(alpm_pkg_t *pkg)
 {
 	return compute_requiredby(pkg, 1);
 }
-
-
-/** @} */
 
 alpm_file_t *_alpm_file_copy(alpm_file_t *dest,
 		const alpm_file_t *src)
@@ -764,16 +784,6 @@ alpm_pkg_t SYMEXPORT *alpm_pkg_find(alpm_list_t *haystack, const char *needle)
 	return NULL;
 }
 
-/** Test if a package should be ignored.
- *
- * Checks if the package is ignored via IgnorePkg, or if the package is
- * in a group ignored via IgnoreGroup.
- *
- * @param handle the context handle
- * @param pkg the package to test
- *
- * @return 1 if the package should be ignored, 0 otherwise
- */
 int SYMEXPORT alpm_pkg_should_ignore(alpm_handle_t *handle, alpm_pkg_t *pkg)
 {
 	alpm_list_t *groups = NULL;

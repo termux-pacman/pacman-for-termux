@@ -1,7 +1,7 @@
 /*
  *  query.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -233,7 +233,15 @@ targcleanup:
 static int query_search(alpm_list_t *targets)
 {
 	alpm_db_t *db_local = alpm_get_localdb(config->handle);
-	return dump_pkg_search(db_local, targets, 0);
+	int ret = dump_pkg_search(db_local, targets, 0);
+	if(ret == -1) {
+		alpm_errno_t err = alpm_errno(config->handle);
+		pm_printf(ALPM_LOG_ERROR, "search failed: %s\n", alpm_strerror(err));
+		return 1;
+	}
+
+	return ret;
+
 }
 
 static unsigned short pkg_get_locality(alpm_pkg_t *pkg)

@@ -1,5 +1,5 @@
 #  Copyright (c) 2006 by Aurelien Foret <orelien@chez.com>
-#  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+#  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -20,9 +20,11 @@ import shlex
 import shutil
 import stat
 import subprocess
+import threading
 import time
 
 import pmrule
+import pmserve
 import pmdb
 import pmfile
 import tap
@@ -46,6 +48,8 @@ class pmtest(object):
                 "--dbpath", self.dbdir(),
                 "--hookdir", self.hookdir(),
                 "--cachedir", self.cachedir()]
+
+        self.http_servers = []
 
     def __str__(self):
         return "name = %s\n" \
@@ -167,10 +171,11 @@ class pmtest(object):
                 vprint("\t%s" % os.path.join(util.PM_CACHEDIR, pkg.filename()))
                 if self.cachepkgs:
                     pkg.makepkg(cachedir)
-                else:
+                elif value.syncdir:
                     pkg.makepkg(os.path.join(syncdir, value.treename))
-                pkg.md5sum = util.getmd5sum(pkg.path)
-                pkg.csize = os.stat(pkg.path)[stat.ST_SIZE]
+                if pkg.path:
+                    pkg.md5sum = util.getmd5sum(pkg.path)
+                    pkg.csize = os.stat(pkg.path)[stat.ST_SIZE]
 
         # Creating sync database archives
         vprint("    Creating databases")
@@ -284,6 +289,8 @@ class pmtest(object):
             output = None
         vprint("\trunning: %s" % " ".join(cmd))
 
+        self.start_http_servers()
+
         # Change to the tmp dir before running pacman, so that local package
         # archives are made available more easily.
         time_start = time.time()
@@ -291,6 +298,8 @@ class pmtest(object):
                 cwd=os.path.join(self.root, util.TMPDIR), env={'LC_ALL': 'C'})
         time_end = time.time()
         vprint("\ttime elapsed: %.2fs" % (time_end - time_start))
+
+        self.stop_http_servers()
 
         if output:
             output.close()
@@ -329,3 +338,23 @@ class pmtest(object):
 
     def hookdir(self):
         return os.path.join(self.root, util.PM_HOOKDIR)
+
+    def add_simple_http_server(self, responses):
+        logfile = lambda h: open(os.path.join(self.root, 'var/log/httpd.log'), 'a')
+        handler = type(self.name + 'HTTPServer',
+                (pmserve.pmStringHTTPRequestHandler,),
+                {'responses': responses, 'logfile': logfile})
+        server = pmserve.pmHTTPServer(('127.0.0.1', 0), handler)
+        self.http_servers.append(server)
+        host, port = server.server_address[:2]
+        return 'http://%s:%d' % (host, port)
+
+    def start_http_servers(self):
+        for srv in self.http_servers:
+            thread = threading.Thread(target=srv.serve_forever)
+            thread.daemon = True
+            thread.start()
+
+    def stop_http_servers(self):
+        for srv in self.http_servers:
+            srv.shutdown()

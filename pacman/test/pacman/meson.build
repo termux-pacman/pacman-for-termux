@@ -85,6 +85,8 @@ pacman_tests = [
   'tests/mode001.py',
   'tests/mode002.py',
   'tests/mode003.py',
+  'tests/multiple-architectures01.py',
+  'tests/multiple-architectures02.py',
   'tests/noupgrade-inverted.py',
   'tests/overwrite-files-match-negated.py',
   'tests/overwrite-files-match.py',
@@ -328,7 +330,23 @@ pacman_tests = [
   'tests/upgrade090.py',
   'tests/upgrade100.py',
   'tests/xfercommand001.py',
+  'tests/upgrade-download-404.py',
+  'tests/upgrade-download-pkg-and-sig-with-filename.py',
+  'tests/upgrade-download-pkg-and-sig-without-filename.py',
+  'tests/upgrade-download-with-xfercommand.py',
 ]
+
+xfail_tests = {
+  'tests/deprange001.py': true,
+  # expect failure on 32 bit machines
+  'tests/query006.py': cc.sizeof('ssize_t') < 8,
+  'tests/replace110.py': true,
+  'tests/sync-update-package-removing-required-provides.py': true,
+  'tests/sync403.py': true,
+  'tests/sync406.py': true,
+  'tests/upgrade078.py': true,
+  'tests/upgrade-download-with-xfercommand.py': true,
+}
 
 foreach input : pacman_tests
   test_name = input.split('/')[1]
@@ -351,6 +369,9 @@ foreach input : pacman_tests
     test_name,
     PYTHON,
     protocol : 'tap',
+    env : ['RUNNING_UNDER_MESON=1'],
     args : args,
+    timeout : 120,
+    should_fail : xfail_tests.get(input, false),
     depends : [pacman_bin])
 endforeach

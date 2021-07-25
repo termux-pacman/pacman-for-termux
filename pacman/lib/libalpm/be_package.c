@@ -1,7 +1,7 @@
 /*
  *  be_package.c : backend for packages
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -134,11 +134,10 @@ static int _package_changelog_close(const alpm_pkg_t UNUSED *pkg, void *fp)
 }
 
 /** Package file operations struct accessor. We implement this as a method
- * rather than a static struct as in be_files because we want to reuse the
- * majority of the default_pkg_ops struct and add only a few operations of
- * our own on top.
+ * because we want to reuse the majority of the default_pkg_ops struct and
+ * add only a few operations of our own on top.
  */
-static struct pkg_operations *get_file_pkg_ops(void)
+static const struct pkg_operations *get_file_pkg_ops(void)
 {
 	static struct pkg_operations file_pkg_ops;
 	static int file_pkg_ops_initialized = 0;
@@ -164,9 +163,8 @@ static int parse_descfile(alpm_handle_t *handle, struct archive *a, alpm_pkg_t *
 	char *ptr = NULL;
 	char *key = NULL;
 	int ret, linenum = 0;
-	struct archive_read_buffer buf;
+	struct archive_read_buffer buf = {0};
 
-	memset(&buf, 0, sizeof(buf));
 	/* 512K for a line length seems reasonable */
 	buf.max_line_size = 512 * 1024;
 
@@ -202,11 +200,15 @@ static int parse_descfile(alpm_handle_t *handle, struct archive *a, alpm_pkg_t *
 			} else if(strcmp(key, "pkgdesc") == 0) {
 				STRDUP(newpkg->desc, ptr, return -1);
 			} else if(strcmp(key, "group") == 0) {
-				newpkg->groups = alpm_list_add(newpkg->groups, strdup(ptr));
+				char *tmp = NULL;
+				STRDUP(tmp, ptr, return -1);
+				newpkg->groups = alpm_list_add(newpkg->groups, tmp);
 			} else if(strcmp(key, "url") == 0) {
 				STRDUP(newpkg->url, ptr, return -1);
 			} else if(strcmp(key, "license") == 0) {
-				newpkg->licenses = alpm_list_add(newpkg->licenses, strdup(ptr));
+				char *tmp = NULL;
+				STRDUP(tmp, ptr, return -1);
+				newpkg->licenses = alpm_list_add(newpkg->licenses, tmp);
 			} else if(strcmp(key, "builddate") == 0) {
 				newpkg->builddate = _alpm_parsedate(ptr);
 			} else if(strcmp(key, "packager") == 0) {
@@ -308,7 +310,7 @@ int _alpm_pkg_validate_internal(alpm_handle_t *handle,
 		}
 	}
 
-	if(syncpkg && !has_sig) {
+	if(syncpkg && (!has_sig || !syncpkg->base64_sig)) {
 		if(syncpkg->md5sum && !syncpkg->sha256sum) {
 			_alpm_log(handle, ALPM_LOG_DEBUG, "md5sum: %s\n", syncpkg->md5sum);
 			_alpm_log(handle, ALPM_LOG_DEBUG, "checking md5sum for %s\n", pkgfile);
@@ -448,18 +450,15 @@ static int build_filelist_from_mtree(alpm_handle_t *handle, alpm_pkg_t *pkg, str
 	char *mtree_data = NULL;
 	struct archive *mtree;
 	struct archive_entry *mtree_entry = NULL;
-	alpm_filelist_t filelist;
+	alpm_filelist_t filelist = {0};
 
 	_alpm_log(handle, ALPM_LOG_DEBUG,
 			"found mtree for package %s, getting file list\n", pkg->filename);
 
-	memset(&filelist, 0, sizeof(alpm_filelist_t));
-
 	/* create a new archive to parse the mtree and load it from archive into memory */
 	/* TODO: split this into a function */
 	if((mtree = archive_read_new()) == NULL) {
-		handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	_alpm_archive_read_support_filter_all(mtree);
@@ -478,8 +477,7 @@ static int build_filelist_from_mtree(alpm_handle_t *handle, alpm_pkg_t *pkg, str
 		if(size < 0) {
 			_alpm_log(handle, ALPM_LOG_DEBUG, _("error while reading package %s: %s\n"),
 					pkg->filename, archive_error_string(archive));
-			handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-			goto error;
+			GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 		}
 		if(size == 0) {
 			break;
@@ -492,8 +490,7 @@ static int build_filelist_from_mtree(alpm_handle_t *handle, alpm_pkg_t *pkg, str
 		_alpm_log(handle, ALPM_LOG_DEBUG,
 				_("error while reading mtree of package %s: %s\n"),
 				pkg->filename, archive_error_string(mtree));
-		handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	while((ret = archive_read_next_header(mtree, &mtree_entry)) == ARCHIVE_OK) {
@@ -516,8 +513,7 @@ static int build_filelist_from_mtree(alpm_handle_t *handle, alpm_pkg_t *pkg, str
 	if(ret != ARCHIVE_EOF && ret != ARCHIVE_OK) { /* An error occurred */
 		_alpm_log(handle, ALPM_LOG_DEBUG, _("error while reading mtree of package %s: %s\n"),
 				pkg->filename, archive_error_string(mtree));
-		handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	/* throw away any files we loaded directly from the archive */
@@ -582,11 +578,9 @@ alpm_pkg_t *_alpm_pkg_load_internal(alpm_handle_t *handle,
 
 	newpkg = _alpm_pkg_new();
 	if(newpkg == NULL) {
-		handle->pm_errno = ALPM_ERR_MEMORY;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_MEMORY, error);
 	}
-	STRDUP(newpkg->filename, pkgfile,
-			handle->pm_errno = ALPM_ERR_MEMORY; goto error);
+	STRDUP(newpkg->filename, pkgfile, GOTO_ERR(handle, ALPM_ERR_MEMORY, error));
 	newpkg->size = st.st_size;
 
 	_alpm_log(handle, ALPM_LOG_DEBUG, "starting package load for %s\n", pkgfile);
@@ -636,8 +630,7 @@ alpm_pkg_t *_alpm_pkg_load_internal(alpm_handle_t *handle,
 		if(archive_read_data_skip(archive)) {
 			_alpm_log(handle, ALPM_LOG_ERROR, _("error while reading package %s: %s\n"),
 					pkgfile, archive_error_string(archive));
-			handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-			goto error;
+			GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 		}
 
 		/* if we are not doing a full read, see if we have all we need */
@@ -649,8 +642,7 @@ alpm_pkg_t *_alpm_pkg_load_internal(alpm_handle_t *handle,
 	if(ret != ARCHIVE_EOF && ret != ARCHIVE_OK) { /* An error occurred */
 		_alpm_log(handle, ALPM_LOG_ERROR, _("error while reading package %s: %s\n"),
 				pkgfile, archive_error_string(archive));
-		handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-		goto error;
+		GOTO_ERR(handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	if(!config) {
@@ -663,7 +655,7 @@ alpm_pkg_t *_alpm_pkg_load_internal(alpm_handle_t *handle,
 
 	/* internal fields for package struct */
 	newpkg->origin = ALPM_PKG_FROM_FILE;
-	newpkg->origin_data.file = strdup(pkgfile);
+	STRDUP(newpkg->origin_data.file, pkgfile, goto error);
 	newpkg->ops = get_file_pkg_ops();
 	newpkg->handle = handle;
 	newpkg->infolevel = INFRQ_BASE | INFRQ_DESC | INFRQ_SCRIPTLET;
@@ -672,8 +664,7 @@ alpm_pkg_t *_alpm_pkg_load_internal(alpm_handle_t *handle,
 	if(full) {
 		if(newpkg->files.files) {
 			/* attempt to hand back any memory we don't need */
-			newpkg->files.files = realloc(newpkg->files.files,
-					sizeof(alpm_file_t) * newpkg->files.count);
+			REALLOC(newpkg->files.files, sizeof(alpm_file_t) * newpkg->files.count, (void)0);
 			/* "checking for conflicts" requires a sorted list, ensure that here */
 			_alpm_log(handle, ALPM_LOG_DEBUG,
 					"sorting package filelist for %s\n", pkgfile);

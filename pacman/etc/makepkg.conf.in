@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bas
+#!/data/data/com.termux/files/usr/bin/bash
 #
 # @sysconfdir@/makepkg.conf
 #
@@ -17,13 +17,14 @@ DLAGENTS=('file::/data/data/com.termux/files/usr/bin/curl -gqC - -o %o %u'
           'scp::/data/data/com.termux/files/usr/bin/scp -C %u %o')
 
 # Other common tools:
-# /usr/bin/snarf
-# /usr/bin/lftpget -c
-# /usr/bin/wget
+# /data/data/com.termux/files/usr/bin/snarf
+# /data/data/com.termux/files/usr/bin/lftpget -c0
+# /data/data/com.termux/files/usr/bin/wget
 
 #-- The package required by makepkg to download VCS sources
 #  Format: 'protocol::package'
 VCSCLIENTS=('bzr::bzr'
+            'fossil::fossil'
             'git::git'
             'hg::mercurial'
             'svn::subversion')
@@ -52,7 +53,7 @@ CHOST="@CHOST@"
 # BUILD ENVIRONMENT
 #########################################################################
 #
-# Defaults: BUILDENV=(!distcc !color !ccache check !sign)
+# Makepkg defaults: BUILDENV=(!distcc !color !ccache check !sign)
 #  A negated environment option will do the opposite of the comments below.
 #
 #-- distcc:   Use the Distributed C/C++/ObjC compiler
@@ -75,7 +76,7 @@ BUILDENV=(!distcc color !ccache check !sign)
 #   These are default values for the options=() settings
 #########################################################################
 #
-# Default: OPTIONS=(!strip docs libtool staticlibs emptydirs !zipman !purge !debug)
+# Makepkg defaults: OPTIONS=(!strip docs libtool staticlibs emptydirs !zipman !purge !debug !lto)
 #  A negated option will do the opposite of the comments below.
 #
 #-- strip:      Strip symbols from binaries/libraries
@@ -86,11 +87,12 @@ BUILDENV=(!distcc color !ccache check !sign)
 #-- zipman:     Compress manual (man and info) pages in MAN_DIRS with gzip
 #-- purge:      Remove files specified by PURGE_TARGETS
 #-- debug:      Add debugging flags as specified in DEBUG_* variables
+#-- lto:        Add compile flags for building with link time optimization
 #
-OPTIONS=(strip docs libtool staticlibs emptydirs zipman purge !debug)
+OPTIONS=(strip docs libtool staticlibs emptydirs zipman purge !debug !lto)
 
-#-- File integrity checks to use. Valid: md5, sha1, sha224, sha256, sha384, sha512, b2
-INTEGRITY_CHECK=(md5)
+#-- File integrity checks to use. Valid: ck, md5, sha1, sha224, sha256, sha384, sha512, b2
+INTEGRITY_CHECK=(ck)
 #-- Options to be used when stripping binaries. See `man strip' for details.
 STRIP_BINARIES="@STRIP_BINARIES@"
 #-- Options to be used when stripping shared libraries. See `man strip' for details.
@@ -104,7 +106,7 @@ DOC_DIRS=(usr/{,local/}{,share/}{doc,gtk-doc} opt/*/{doc,gtk-doc})
 #-- Files to be removed from all packages (if purge is specified)
 PURGE_TARGETS=(usr/{,share}/info/dir .packlist *.pod)
 #-- Directory to store source code in for debug packages
-DBGSRCDIR="/data/data/com.termux/files/usr/src/debug"
+DBGSRCDIR="/usr/src/debug"
 
 #########################################################################
 # PACKAGE OUTPUT
@@ -145,3 +147,10 @@ COMPRESSLZ=(lzip -c -f)
 #
 PKGEXT='@PKGEXT@'
 SRCEXT='@SRCEXT@'
+
+#########################################################################
+# OTHER
+#########################################################################
+#
+#-- Command used to run pacman as root, instead of trying sudo and su
+PACMAN_AUTH=()

@@ -1,7 +1,7 @@
 /*
  *  sync.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -22,6 +22,7 @@
  */
 
 #include <sys/types.h> /* off_t */
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,10 +53,6 @@ struct keyinfo_t {
        char* keyid;
 };
 
-
-/** Check for new version of pkg in sync repos
- * (only the first occurrence is considered in sync)
- */
 alpm_pkg_t SYMEXPORT *alpm_sync_get_new_version(alpm_pkg_t *pkg, alpm_list_t *dbs_sync)
 {
 	alpm_list_t *i;
@@ -200,7 +197,6 @@ static alpm_list_t *check_replacers(alpm_handle_t *handle, alpm_pkg_t *lpkg,
 	return replacers;
 }
 
-/** Search for packages to upgrade and add them to the transaction. */
 int SYMEXPORT alpm_sync_sysupgrade(alpm_handle_t *handle, int enable_downgrade)
 {
 	alpm_list_t *i, *j;
@@ -256,13 +252,6 @@ int SYMEXPORT alpm_sync_sysupgrade(alpm_handle_t *handle, int enable_downgrade)
 	return 0;
 }
 
-/** Find group members across a list of databases.
- * If a member exists in several databases, only the first database is used.
- * IgnorePkg is also handled.
- * @param dbs the list of alpm_db_t *
- * @param name the name of the group
- * @return the list of alpm_pkg_t * (caller is responsible for alpm_list_free)
- */
 alpm_list_t SYMEXPORT *alpm_find_group_pkgs(alpm_list_t *dbs,
 		const char *name)
 {
@@ -468,12 +457,30 @@ int _alpm_sync_prepare(alpm_handle_t *handle, alpm_list_t **data)
 				}
 			} else {
 				/* pm_errno was set by resolvedeps, callback may have overwrote it */
-				handle->pm_errno = ALPM_ERR_UNSATISFIED_DEPS;
 				alpm_list_free(resolved);
 				alpm_list_free(unresolvable);
 				ret = -1;
-				goto cleanup;
+				GOTO_ERR(handle, ALPM_ERR_UNSATISFIED_DEPS, cleanup);
 			}
+		}
+
+		/* Ensure two packages don't have the same filename */
+		for(i = resolved; i; i = i->next) {
+			alpm_pkg_t *pkg1 = i->data;
+			for(j = i->next; j; j = j->next) {
+				alpm_pkg_t *pkg2 = j->data;
+				if(strcmp(pkg1->filename, pkg2->filename) == 0) {
+					alpm_list_free(resolved);
+					ret = -1;
+					handle->pm_errno = ALPM_ERR_TRANS_DUP_FILENAME;
+					_alpm_log(handle, ALPM_LOG_ERROR, _("packages %s and %s have the same filename: %s\n"),
+						pkg1->name, pkg2->name, pkg1->filename);
+				}
+			}
+		}
+
+		if(ret != 0) {
+			goto cleanup;
 		}
 
 		/* Set DEPEND reason for pulled packages */
@@ -673,11 +680,6 @@ cleanup:
 	return ret;
 }
 
-/** Returns the size of the files that will be downloaded to install a
- * package.
- * @param newpkg the new package to upgrade to
- * @return the size of the download
- */
 off_t SYMEXPORT alpm_pkg_download_size(alpm_pkg_t *newpkg)
 {
 	if(!(newpkg->infolevel & INFRQ_DSIZE)) {
@@ -705,33 +707,26 @@ static int prompt_to_delete(alpm_handle_t *handle, const char *filepath,
 	};
 	QUESTION(handle, &question);
 	if(question.remove) {
+		char *sig_filepath;
+
 		unlink(filepath);
+
+		sig_filepath = _alpm_sigpath(handle, filepath);
+		unlink(sig_filepath);
+		FREE(sig_filepath);
 	}
 	return question.remove;
 }
 
-static struct dload_payload *build_payload(alpm_handle_t *handle,
-		const char *filename, size_t size, alpm_list_t *servers)
+static int find_dl_candidates(alpm_handle_t *handle, alpm_list_t **files)
 {
-		struct dload_payload *payload;
-
-		CALLOC(payload, 1, sizeof(*payload), RET_ERR(handle, ALPM_ERR_MEMORY, NULL));
-		STRDUP(payload->remote_name, filename, FREE(payload); RET_ERR(handle, ALPM_ERR_MEMORY, NULL));
-		payload->max_size = size;
-		payload->servers = servers;
-		return payload;
-}
-
-static int find_dl_candidates(alpm_db_t *repo, alpm_list_t **files)
-{
-	alpm_list_t *i;
-	alpm_handle_t *handle = repo->handle;
-
-	for(i = handle->trans->add; i; i = i->next) {
+	for(alpm_list_t *i = handle->trans->add; i; i = i->next) {
 		alpm_pkg_t *spkg = i->data;
 
-		if(spkg->origin != ALPM_PKG_FROM_FILE && repo == spkg->origin_data.db) {
-			char *fpath = NULL;
+		if(spkg->origin != ALPM_PKG_FROM_FILE) {
+			alpm_db_t *repo = spkg->origin_data.db;
+			bool need_download;
+			int siglevel = alpm_db_get_siglevel(alpm_pkg_get_db(spkg));
 
 			if(!repo->servers) {
 				handle->pm_errno = ALPM_ERR_SERVER_NONE;
@@ -742,85 +737,46 @@ static int find_dl_candidates(alpm_db_t *repo, alpm_list_t **files)
 
 			ASSERT(spkg->filename != NULL, RET_ERR(handle, ALPM_ERR_PKG_INVALID_NAME, -1));
 
-			if(spkg->download_size == 0) {
-				/* check for file in cache - allows us to handle complete .part files */
-				fpath = _alpm_filecache_find(handle, spkg->filename);
+			need_download = spkg->download_size != 0 || !_alpm_filecache_exists(handle, spkg->filename);
+			/* even if the package file in the cache we need to check for
+			 * accompanion *.sig file as well.
+			 * If *.sig is not cached then force download the package + its signature file.
+			 */
+			if(!need_download && (siglevel & ALPM_SIG_PACKAGE)) {
+				char *sig_filename = NULL;
+				int len = strlen(spkg->filename) + 5;
+
+				MALLOC(sig_filename, len, RET_ERR(handle, ALPM_ERR_MEMORY, -1));
+				snprintf(sig_filename, len, "%s.sig", spkg->filename);
+
+				need_download = !_alpm_filecache_exists(handle, sig_filename);
+
+				FREE(sig_filename);
 			}
 
-			if(spkg->download_size != 0 || !fpath) {
-				struct dload_payload *payload;
-				payload = build_payload(handle, spkg->filename, spkg->size, repo->servers);
-				ASSERT(payload, return -1);
-				*files = alpm_list_add(*files, payload);
+			if(need_download) {
+				*files = alpm_list_add(*files, spkg);
 			}
-
-			FREE(fpath);
 		}
 	}
 
 	return 0;
 }
 
-static int download_single_file(alpm_handle_t *handle, struct dload_payload *payload,
-		const char *cachedir)
-{
-	alpm_event_pkgdownload_t event = {
-		.type = ALPM_EVENT_PKGDOWNLOAD_START,
-		.file = payload->remote_name
-	};
-	const alpm_list_t *server;
-
-	payload->handle = handle;
-	payload->allow_resume = 1;
-
-	EVENT(handle, &event);
-	for(server = payload->servers; server; server = server->next) {
-		const char *server_url = server->data;
-		size_t len;
-
-		/* print server + filename into a buffer */
-		len = strlen(server_url) + strlen(payload->remote_name) + 2;
-		MALLOC(payload->fileurl, len, RET_ERR(handle, ALPM_ERR_MEMORY, -1));
-		snprintf(payload->fileurl, len, "%s/%s", server_url, payload->remote_name);
-
-		if(_alpm_download(payload, cachedir, NULL, NULL) != -1) {
-			event.type = ALPM_EVENT_PKGDOWNLOAD_DONE;
-			EVENT(handle, &event);
-			return 0;
-		}
-		_alpm_dload_payload_reset_for_retry(payload);
-	}
-
-	event.type = ALPM_EVENT_PKGDOWNLOAD_FAILED;
-	EVENT(handle, &event);
-	return -1;
-}
-
 static int download_files(alpm_handle_t *handle)
 {
 	const char *cachedir;
 	alpm_list_t *i, *files = NULL;
-	int errors = 0;
-	alpm_event_t event;
+	int ret = 0;
+	alpm_event_t event = {0};
+	alpm_list_t *payloads = NULL;
 
 	cachedir = _alpm_filecache_setup(handle);
 	handle->trans->state = STATE_DOWNLOADING;
 
-	/* Total progress - figure out the total download size if required to
-	 * pass to the callback. This function is called once, and it is up to the
-	 * frontend to compute incremental progress. */
-	if(handle->totaldlcb) {
-		off_t total_size = (off_t)0;
-		/* sum up the download size for each package and store total */
-		for(i = handle->trans->add; i; i = i->next) {
-			alpm_pkg_t *spkg = i->data;
-			total_size += spkg->download_size;
-		}
-		handle->totaldlcb(total_size);
-	}
-
-	for(i = handle->dbs_sync; i; i = i->next) {
-		errors += find_dl_candidates(i->data, &files);
+	ret = find_dl_candidates(handle, &files);
+	if(ret != 0) {
+		goto finish;
 	}
 
 	if(files) {
@@ -828,7 +784,6 @@ static int download_files(alpm_handle_t *handle)
 		if(handle->checkspace) {
 			off_t *file_sizes;
 			size_t idx, num_files;
-			int ret;
 
 			_alpm_log(handle, ALPM_LOG_DEBUG, "checking available disk space for download\n");
 
@@ -836,36 +791,67 @@ static int download_files(alpm_handle_t *handle)
 			CALLOC(file_sizes, num_files, sizeof(off_t), goto finish);
 
 			for(i = files, idx = 0; i; i = i->next, idx++) {
-				const struct dload_payload *payload = i->data;
-				file_sizes[idx] = payload->max_size;
+				const alpm_pkg_t *pkg = i->data;
+				file_sizes[idx] = pkg->size;
 			}
 
 			ret = _alpm_check_downloadspace(handle, cachedir, num_files, file_sizes);
 			free(file_sizes);
 
 			if(ret != 0) {
-				errors++;
 				goto finish;
 			}
 		}
 
-		event.type = ALPM_EVENT_RETRIEVE_START;
-		EVENT(handle, &event);
-		event.type = ALPM_EVENT_RETRIEVE_DONE;
+		event.type = ALPM_EVENT_PKG_RETRIEVE_START;
+
+		/* sum up the number of packages to download and its total size */
 		for(i = files; i; i = i->next) {
-			if(download_single_file(handle, i->data, cachedir) == -1) {
-				errors++;
-				event.type = ALPM_EVENT_RETRIEVE_FAILED;
-				_alpm_log(handle, ALPM_LOG_WARNING, _("failed to retrieve some files\n"));
-			}
+			alpm_pkg_t *spkg = i->data;
+			event.pkg_retrieve.total_size += spkg->download_size;
+			event.pkg_retrieve.num++;
 		}
+
+		EVENT(handle, &event);
+		for(i = files; i; i = i->next) {
+			alpm_pkg_t *pkg = i->data;
+			int siglevel = alpm_db_get_siglevel(alpm_pkg_get_db(pkg));
+			struct dload_payload *payload = NULL;
+
+			CALLOC(payload, 1, sizeof(*payload), GOTO_ERR(handle, ALPM_ERR_MEMORY, finish));
+			STRDUP(payload->remote_name, pkg->filename, FREE(payload); GOTO_ERR(handle, ALPM_ERR_MEMORY, finish));
+			STRDUP(payload->filepath, pkg->filename,
+				FREE(payload->remote_name); FREE(payload);
+				GOTO_ERR(handle, ALPM_ERR_MEMORY, finish));
+			payload->max_size = pkg->size;
+			payload->servers = pkg->origin_data.db->servers;
+			payload->handle = handle;
+			payload->allow_resume = 1;
+			payload->download_signature = (siglevel & ALPM_SIG_PACKAGE);
+			payload->signature_optional = (siglevel & ALPM_SIG_PACKAGE_OPTIONAL);
+
+			payloads = alpm_list_add(payloads, payload);
+		}
+
+		ret = _alpm_download(handle, payloads, cachedir);
+		if(ret == -1) {
+			event.type = ALPM_EVENT_PKG_RETRIEVE_FAILED;
+			EVENT(handle, &event);
+			_alpm_log(handle, ALPM_LOG_WARNING, _("failed to retrieve some files\n"));
+			goto finish;
+		}
+		event.type = ALPM_EVENT_PKG_RETRIEVE_DONE;
 		EVENT(handle, &event);
 	}
 
 finish:
+	if(payloads) {
+		alpm_list_free_inner(payloads, (alpm_list_fn_free)_alpm_dload_payload_reset);
+		FREELIST(payloads);
+	}
+
 	if(files) {
-		alpm_list_free_inner(files, (alpm_list_fn_free)_alpm_dload_payload_reset);
-		FREELIST(files);
+		alpm_list_free(files);
 	}
 
 	for(i = handle->trans->add; i; i = i->next) {
@@ -874,12 +860,7 @@ finish:
 		pkg->download_size = 0;
 	}
 
-	/* clear out value to let callback know we are done */
-	if(handle->totaldlcb) {
-		handle->totaldlcb(0);
-	}
-
-	return errors;
+	return ret;
 }
 
 #ifdef HAVE_LIBGPGME
@@ -916,18 +897,18 @@ static int check_keyring(alpm_handle_t *handle)
 		}
 
 		level = alpm_db_get_siglevel(alpm_pkg_get_db(pkg));
-		if((level & ALPM_SIG_PACKAGE) && pkg->base64_sig) {
-			unsigned char *decoded_sigdata = NULL;
-			size_t data_len;
-			int decode_ret = alpm_decode_signature(pkg->base64_sig,
-					&decoded_sigdata, &data_len);
-			if(decode_ret == 0) {
+		if((level & ALPM_SIG_PACKAGE)) {
+			unsigned char *sig = NULL;
+			size_t sig_len;
+			int ret = alpm_pkg_get_sig(pkg, &sig, &sig_len);
+			if(ret == 0) {
 				alpm_list_t *keys = NULL;
-				if(alpm_extract_keyid(handle, pkg->name, decoded_sigdata,
-							data_len, &keys) == 0) {
+				if(alpm_extract_keyid(handle, pkg->name, sig,
+							sig_len, &keys) == 0) {
 					alpm_list_t *k;
 					for(k = keys; k; k = k->next) {
 						char *key = k->data;
+						_alpm_log(handle, ALPM_LOG_DEBUG, "found signature key: %s\n", key);
 						if(!alpm_list_find(errors, key, key_cmp) &&
 								_alpm_key_in_keychain(handle, key) == 0) {
 							keyinfo = malloc(sizeof(struct keyinfo_t));
@@ -941,8 +922,8 @@ static int check_keyring(alpm_handle_t *handle)
 					}
 					FREELIST(keys);
 				}
-				free(decoded_sigdata);
 			}
+			free(sig);
 		}
 	}
 
@@ -963,8 +944,9 @@ static int check_keyring(alpm_handle_t *handle)
 			}
 			free(keyinfo->uid);
 			free(keyinfo->keyid);
-
+			free(keyinfo);
 		}
+		alpm_list_free(errors);
 		event.type = ALPM_EVENT_KEY_DOWNLOAD_DONE;
 		EVENT(handle, &event);
 		if(fail) {
@@ -1044,7 +1026,7 @@ static int check_validity(alpm_handle_t *handle,
 							v->siglevel & ALPM_SIG_PACKAGE_OPTIONAL,
 							v->siglevel & ALPM_SIG_PACKAGE_MARGINAL_OK,
 							v->siglevel & ALPM_SIG_PACKAGE_UNKNOWN_OK);
-					/* fallthrough */
+					__attribute__((fallthrough));
 				case ALPM_ERR_PKG_INVALID_CHECKSUM:
 					prompt_to_delete(handle, v->path, v->error);
 					break;
@@ -1165,7 +1147,7 @@ int _alpm_sync_load(alpm_handle_t *handle, alpm_list_t **data)
 	uint64_t total_bytes = 0;
 	alpm_trans_t *trans = handle->trans;
 
-	if(download_files(handle)) {
+	if(download_files(handle) == -1) {
 		return -1;
 	}
 

@@ -1,7 +1,7 @@
 /*
  *  log.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,11 +30,6 @@
 #include "util.h"
 #include "alpm.h"
 
-/** \addtogroup alpm_log Logging Functions
- * @brief Functions to log using libalpm
- * @{
- */
-
 static int _alpm_log_leader(FILE *f, const char *prefix)
 {
 	time_t t = time(NULL);
@@ -47,12 +42,6 @@ static int _alpm_log_leader(FILE *f, const char *prefix)
 	return fprintf(f, "[%s] [%s] ", timestamp, prefix);
 }
 
-/** A printf-like function for logging.
- * @param handle the context handle
- * @param prefix caller-specific prefix for the log
- * @param fmt output format
- * @return 0 on success, -1 on error (pm_errno is set accordingly)
- */
 int SYMEXPORT alpm_logaction(alpm_handle_t *handle, const char *prefix,
 		const char *fmt, ...)
 {
@@ -109,8 +98,6 @@ int SYMEXPORT alpm_logaction(alpm_handle_t *handle, const char *prefix,
 	return ret;
 }
 
-/** @} */
-
 void _alpm_log(alpm_handle_t *handle, alpm_loglevel_t flag, const char *fmt, ...)
 {
 	va_list args;
@@ -120,6 +107,6 @@ void _alpm_log(alpm_handle_t *handle, alpm_loglevel_t flag, const char *fmt, ...
 	}
 
 	va_start(args, fmt);
-	handle->logcb(flag, fmt, args);
+	handle->logcb(handle->logcb_ctx, flag, fmt, args);
 	va_end(args);
 }

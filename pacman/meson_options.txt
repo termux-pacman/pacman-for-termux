@@ -14,7 +14,7 @@ option('pkg-ext', type : 'string', value : '.pkg.tar.gz',
 option('src-ext', type : 'string', value : '.src.tar.gz',
        description : 'set the file extension used by source packages')
 
-option('scriptlet-shell', type : 'string', value : '/data/data/com.termux/files/usr/bin/dash',
+option('scriptlet-shell', type : 'string', value : '/bin/sh',
        description : 'The full path of the shell used to run install scriptlets')
 
 option('ldconfig', type : 'string', value : '/sbin/ldconfig',
@@ -54,6 +54,3 @@ option('i18n', type : 'boolean', value : true,
 # tools
 option('file-seccomp', type: 'feature', value: 'auto',
 	   description: 'determine whether file is seccomp-enabled')
-
-option('sedinplaceflags', type : 'string', value : 'auto',
-       description : 'flags to pass to sed to edit a file in-place')

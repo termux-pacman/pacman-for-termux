@@ -1,7 +1,7 @@
 /*
  *  conf.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ typedef struct __colstr_t {
 	const char *meta;
 	const char *warn;
 	const char *err;
+	const char *faint;
 	const char *nocolor;
 } colstr_t;
 
@@ -56,7 +57,6 @@ typedef struct __config_t {
 	unsigned short usesyslog;
 	unsigned short color;
 	unsigned short disable_dl_timeout;
-	char *arch;
 	char *print_format;
 	/* unfortunately, we have to keep track of paths both here and in the library
 	 * because they can come from both the command line or config file, and we
@@ -69,6 +69,7 @@ typedef struct __config_t {
 	char *sysroot;
 	alpm_list_t *hookdirs;
 	alpm_list_t *cachedirs;
+	alpm_list_t *architectures;
 
 	unsigned short op_q_isfile;
 	unsigned short op_q_info;
@@ -112,13 +113,13 @@ typedef struct __config_t {
 	unsigned short chomp;
 	/* format target pkg lists as table */
 	unsigned short verbosepkglists;
-	/* When downloading, display the amount downloaded, rate, ETA, and percent
-	 * downloaded of the total download list */
-	unsigned short totaldownload;
+	/* number of parallel download streams */
+	unsigned int parallel_downloads;
 	/* select -Sc behavior */
 	unsigned short cleanmethod;
 	alpm_list_t *holdpkg;
 	alpm_list_t *ignorepkg;
+	alpm_list_t *ignoregrp;
 	alpm_list_t *assumeinstalled;
 	alpm_list_t *noupgrade;
 	alpm_list_t *noextract;
@@ -166,6 +167,7 @@ enum {
 	OP_HOOKDIR,
 	OP_ASDEPS,
 	OP_LOGFILE,
+	OP_IGNOREGROUP,
 	OP_NEEDED,
 	OP_ASEXPLICIT,
 	OP_ARCH,
@@ -239,7 +241,7 @@ int config_free(config_t *oldconfig);
 
 void config_repo_free(config_repo_t *repo);
 
-int config_set_arch(const char *arch);
+int config_add_architecture(char *arch);
 int parseconfig(const char *file);
 int parseconfigfile(const char *file);
 int setdefaults(config_t *c);

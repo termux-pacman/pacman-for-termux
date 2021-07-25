@@ -1,7 +1,7 @@
 /*
  *  trans.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -42,12 +42,6 @@
 #include "deps.h"
 #include "hook.h"
 
-/** \addtogroup alpm_trans Transaction Functions
- * @brief Functions to manipulate libalpm transactions
- * @{
- */
-
-/** Initialize the transaction. */
 int SYMEXPORT alpm_trans_init(alpm_handle_t *handle, int flags)
 {
 	alpm_trans_t *trans;
@@ -77,14 +71,29 @@ static alpm_list_t *check_arch(alpm_handle_t *handle, alpm_list_t *pkgs)
 	alpm_list_t *i;
 	alpm_list_t *invalid = NULL;
 
-	const char *arch = handle->arch;
-	if(!arch) {
+	if(!handle->architectures) {
+		_alpm_log(handle, ALPM_LOG_DEBUG, "skipping architecture checks\n");
 		return NULL;
 	}
 	for(i = pkgs; i; i = i->next) {
 		alpm_pkg_t *pkg = i->data;
+		alpm_list_t *j;
+		int found = 0;
 		const char *pkgarch = alpm_pkg_get_arch(pkg);
-		if(pkgarch && strcmp(pkgarch, arch) && strcmp(pkgarch, "any")) {
+
+		/* always allow non-architecture packages and those marked "any" */
+		if(!pkgarch || strcmp(pkgarch, "any") == 0) {
+			continue;
+		}
+
+		for(j = handle->architectures; j; j = j->next) {
+			if(strcmp(pkgarch, j->data) == 0) {
+				found = 1;
+				break;
+			}
+		}
+
+		if(!found) {
 			char *string;
 			const char *pkgname = pkg->name;
 			const char *pkgver = pkg->version;
@@ -97,7 +106,6 @@ static alpm_list_t *check_arch(alpm_handle_t *handle, alpm_list_t *pkgs)
 	return invalid;
 }
 
-/** Prepare a transaction. */
 int SYMEXPORT alpm_trans_prepare(alpm_handle_t *handle, alpm_list_t **data)
 {
 	alpm_trans_t *trans;
@@ -129,7 +137,7 @@ int SYMEXPORT alpm_trans_prepare(alpm_handle_t *handle, alpm_list_t **data)
 			/* pm_errno is set by _alpm_remove_prepare() */
 			return -1;
 		}
-	}	else {
+	} else {
 		if(_alpm_sync_prepare(handle, data) == -1) {
 			/* pm_errno is set by _alpm_sync_prepare() */
 			return -1;
@@ -156,7 +164,6 @@ int SYMEXPORT alpm_trans_prepare(alpm_handle_t *handle, alpm_list_t **data)
 	return 0;
 }
 
-/** Commit a transaction. */
 int SYMEXPORT alpm_trans_commit(alpm_handle_t *handle, alpm_list_t **data)
 {
 	alpm_trans_t *trans;
@@ -233,9 +240,6 @@ int SYMEXPORT alpm_trans_commit(alpm_handle_t *handle, alpm_list_t **data)
 	return 0;
 }
 
-/** Interrupt a transaction.
- * @note Safe to call from inside signal handlers.
- */
 int SYMEXPORT alpm_trans_interrupt(alpm_handle_t *handle)
 {
 	alpm_trans_t *trans;
@@ -253,7 +257,6 @@ int SYMEXPORT alpm_trans_interrupt(alpm_handle_t *handle)
 	return 0;
 }
 
-/** Release a transaction. */
 int SYMEXPORT alpm_trans_release(alpm_handle_t *handle)
 {
 	alpm_trans_t *trans;
@@ -277,8 +280,6 @@ int SYMEXPORT alpm_trans_release(alpm_handle_t *handle)
 
 	return 0;
 }
-
-/** @} */
 
 void _alpm_trans_free(alpm_trans_t *trans)
 {

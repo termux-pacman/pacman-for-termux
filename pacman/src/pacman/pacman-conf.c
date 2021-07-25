@@ -1,7 +1,7 @@
 /*
  *  pacman-conf.c - parse pacman configuration files
  *
- *  Copyright (c) 2013-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2013-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ static void parse_opts(int argc, char **argv)
 				config_file = optarg;
 				break;
 			case 'R':
+				free(config->rootdir);
 				if ((config->rootdir = strdup(optarg)) == NULL) {
 					fprintf(stderr, _("error setting rootdir '%s': out of memory\n"), optarg);
 					cleanup();
@@ -140,6 +141,14 @@ static void show_str(const char *directive, const char *val)
 		printf("%s = ", directive);
 	}
 	printf("%s%c", val, sep);
+}
+
+static void show_int(const char *directive, unsigned int val)
+{
+	if (verbose) {
+		printf("%s = ", directive);
+	}
+	printf("%u%c", val, sep);
 }
 
 static void show_list_str(const char *directive, alpm_list_t *list)
@@ -245,19 +254,22 @@ static void dump_config(void)
 
 	show_list_str("HoldPkg", config->holdpkg);
 	show_list_str("IgnorePkg", config->ignorepkg);
+	show_list_str("IgnoreGroup", config->ignoregrp);
 	show_list_str("NoUpgrade", config->noupgrade);
 	show_list_str("NoExtract", config->noextract);
 
-	show_str("Architecture", config->arch);
+	show_list_str("Architecture", config->architectures);
 	show_str("XferCommand", config->xfercommand);
 
 	show_bool("UseSyslog", config->usesyslog);
 	show_bool("Color", config->color);
-	show_bool("TotalDownload", config->totaldownload);
 	show_bool("CheckSpace", config->checkspace);
 	show_bool("VerbosePkgLists", config->verbosepkglists);
 	show_bool("DisableDownloadTimeout", config->disable_dl_timeout);
 	show_bool("ILoveCandy", config->chomp);
+	show_bool("NoProgressBar", config->noprogressbar);
+
+	show_int("ParallelDownloads", config->parallel_downloads);
 
 	show_cleanmethod("CleanMethod", config->cleanmethod);
 
@@ -342,6 +354,8 @@ static int list_directives(void)
 			show_list_str("HoldPkg", config->holdpkg);
 		} else if(strcasecmp(i->data, "IgnorePkg") == 0) {
 			show_list_str("IgnorePkg", config->ignorepkg);
+		} else if(strcasecmp(i->data, "IgnoreGroup") == 0) {
+			show_list_str("IgnoreGroup", config->ignoregrp);
 		} else if(strcasecmp(i->data, "NoUpgrade") == 0) {
 			show_list_str("NoUpgrade", config->noupgrade);
 		} else if(strcasecmp(i->data, "NoExtract") == 0) {
@@ -349,7 +363,7 @@ static int list_directives(void)
 
 
 		} else if(strcasecmp(i->data, "Architecture") == 0) {
-			show_str("Architecture", config->arch);
+			show_list_str("Architecture", config->architectures);
 		} else if(strcasecmp(i->data, "XferCommand") == 0) {
 			show_str("XferCommand", config->xfercommand);
 
@@ -357,8 +371,6 @@ static int list_directives(void)
 			show_bool("UseSyslog", config->usesyslog);
 		} else if(strcasecmp(i->data, "Color") == 0) {
 			show_bool("Color", config->color);
-		} else if(strcasecmp(i->data, "TotalDownload") == 0) {
-			show_bool("TotalDownload", config->totaldownload);
 		} else if(strcasecmp(i->data, "CheckSpace") == 0) {
 			show_bool("CheckSpace", config->checkspace);
 		} else if(strcasecmp(i->data, "VerbosePkgLists") == 0) {
@@ -367,6 +379,11 @@ static int list_directives(void)
 			show_bool("DisableDownloadTimeout", config->disable_dl_timeout);
 		} else if(strcasecmp(i->data, "ILoveCandy") == 0) {
 			show_bool("ILoveCandy", config->chomp);
+		} else if(strcasecmp(i->data, "NoProgressBar") == 0) {
+			show_bool("NoProgressBar", config->noprogressbar);
+
+		} else if(strcasecmp(i->data, "ParallelDownloads") == 0) {
+			show_int("ParallelDownloads", config->parallel_downloads);
 
 		} else if(strcasecmp(i->data, "CleanMethod") == 0) {
 			show_cleanmethod("CleanMethod", config->cleanmethod);

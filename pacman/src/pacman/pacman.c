@@ -1,7 +1,7 @@
 /*
  *  pacman.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -110,7 +110,7 @@ static void usage(int op, const char * const myname)
 		printf("    %s {-h --help}\n", myname);
 		printf("    %s {-V --version}\n", myname);
 		printf("    %s {-D --database} <%s> <%s>\n", myname, str_opt, str_pkg);
-		printf("    %s {-F --files}    [%s] [%s]\n", myname, str_opt, str_pkg);
+		printf("    %s {-F --files}    [%s] [%s]\n", myname, str_opt, str_file);
 		printf("    %s {-Q --query}    [%s] [%s]\n", myname, str_opt, str_pkg);
 		printf("    %s {-R --remove}   [%s] <%s>\n", myname, str_opt, str_pkg);
 		printf("    %s {-S --sync}     [%s] [%s]\n", myname, str_opt, str_pkg);
@@ -161,7 +161,6 @@ static void usage(int op, const char * const myname)
 			addlist(_("  -q, --quiet          show less information for query and search\n"));
 			addlist(_("  -s, --search <regex> search remote repositories for matching strings\n"));
 			addlist(_("  -u, --sysupgrade     upgrade installed packages (-uu enables downgrades)\n"));
-			addlist(_("  -w, --downloadonly   download packages but do not install/upgrade anything\n"));
 			addlist(_("  -y, --refresh        download fresh package databases from the server\n"
 			          "                       (-yy to force a refresh even if up to date)\n"));
 			addlist(_("      --needed         do not reinstall up to date packages\n"));
@@ -176,6 +175,8 @@ static void usage(int op, const char * const myname)
 			printf("%s:  %s {-T --deptest} [%s] [%s]\n", str_usg, myname, str_opt, str_pkg);
 			printf("%s:\n", str_opt);
 		} else if(op == PM_OP_FILES) {
+			printf("%s:  %s {-F --files} [%s] [%s]\n", str_usg, myname, str_opt, str_file);
+			printf("%s:\n", str_opt);
 			addlist(_("  -l, --list           list the files owned by the queried package\n"));
 			addlist(_("  -q, --quiet          show less information for query and search\n"));
 			addlist(_("  -x, --regex          enable searching using regular expressions\n"));
@@ -187,14 +188,15 @@ static void usage(int op, const char * const myname)
 		switch(op) {
 			case PM_OP_SYNC:
 			case PM_OP_UPGRADE:
-				addlist(_("      --overwrite <path>\n"
+				addlist(_("  -w, --downloadonly   download packages but do not install/upgrade anything\n"));
+				addlist(_("      --overwrite <glob>\n"
 				          "                       overwrite conflicting files (can be used more than once)\n"));
 				addlist(_("      --asdeps         install packages as non-explicitly installed\n"));
 				addlist(_("      --asexplicit     install packages as explicitly installed\n"));
 				addlist(_("      --ignore <pkg>   ignore a package upgrade (can be used more than once)\n"));
 				addlist(_("      --ignoregroup <grp>\n"
 				          "                       ignore a group upgrade (can be used more than once)\n"));
-				/* fall through */
+				__attribute__((fallthrough));
 			case PM_OP_REMOVE:
 				addlist(_("  -d, --nodeps         skip dependency version checks (-dd to skip all checks)\n"));
 				addlist(_("      --assume-installed <package=version>\n"
@@ -239,7 +241,7 @@ static void version(void)
 {
 	printf("\n");
 	printf(" .--.                  Pacman v%s - libalpm v%s\n", PACKAGE_VERSION, alpm_version());
-	printf("/ _.-' .-.  .-.  .-.   Copyright (C) 2006-2020 Pacman Development Team\n");
+	printf("/ _.-' .-.  .-.  .-.   Copyright (C) 2006-2021 Pacman Development Team\n");
 	printf("\\  '-. '-'  '-'  '-'   Copyright (C) 2002-2006 Judd Vinet\n");
 	printf(" '--'\n");
 	printf(_("                       This program may be freely redistributed under\n"
@@ -300,6 +302,7 @@ static void cleanup(int ret)
 
 	/* free memory */
 	FREELIST(pm_targets);
+	console_cursor_show();
 	exit(ret);
 }
 
@@ -374,7 +377,7 @@ static int parsearg_global(int opt)
 {
 	switch(opt) {
 		case OP_ARCH:
-			config_set_arch(optarg);
+			config_add_architecture(strdup(optarg));
 			break;
 		case OP_ASK:
 			config->noask = 1;
@@ -409,7 +412,8 @@ static int parsearg_global(int opt)
 				unsigned short debug = (unsigned short)atoi(optarg);
 				switch(debug) {
 					case 2:
-						config->logmask |= ALPM_LOG_FUNCTION; /* fall through */
+						config->logmask |= ALPM_LOG_FUNCTION;
+						__attribute__((fallthrough));
 					case 1:
 						config->logmask |= ALPM_LOG_DEBUG;
 						break;
@@ -729,6 +733,15 @@ static int parsearg_upgrade(int opt)
 		case OP_IGNORE:
 			parsearg_util_addlist(&(config->ignorepkg));
 			break;
+		case OP_IGNOREGROUP:
+			parsearg_util_addlist(&(config->ignoregrp));
+			break;
+		case OP_DOWNLOADONLY:
+		case 'w':
+			config->op_s_downloadonly = 1;
+			config->flags |= ALPM_TRANS_FLAG_DOWNLOADONLY;
+			config->flags |= ALPM_TRANS_FLAG_NOCONFLICTS;
+			break;
 		default: return 1;
 	}
 	return 0;
@@ -813,12 +826,6 @@ static int parsearg_sync(int opt)
 		case OP_SYSUPGRADE:
 		case 'u':
 			(config->op_s_upgrade)++;
-			break;
-		case OP_DOWNLOADONLY:
-		case 'w':
-			config->op_s_downloadonly = 1;
-			config->flags |= ALPM_TRANS_FLAG_DOWNLOADONLY;
-			config->flags |= ALPM_TRANS_FLAG_NOCONFLICTS;
 			break;
 		case OP_REFRESH:
 		case 'y':
@@ -931,6 +938,7 @@ static int parseargs(int argc, char *argv[])
 		{"hookdir",    required_argument, 0, OP_HOOKDIR},
 		{"asdeps",     no_argument,       0, OP_ASDEPS},
 		{"logfile",    required_argument, 0, OP_LOGFILE},
+		{"ignoregroup", required_argument, 0, OP_IGNOREGROUP},
 		{"needed",     no_argument,       0, OP_NEEDED},
 		{"asexplicit",     no_argument,   0, OP_ASEXPLICIT},
 		{"arch",       required_argument, 0, OP_ARCH},
@@ -1080,6 +1088,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	uid_t myuid = getuid();
 
+	console_cursor_hide();
 	install_segv_handler();
 
 	/* i18n init */
@@ -1124,12 +1133,6 @@ int main(int argc, char *argv[])
 	/* check if we have sufficient permission for the requested operation */
 	if(myuid == 0) {
 		pm_printf(ALPM_LOG_ERROR, _("blocking operation, you can not run from the root of the user.\n"));
-		cleanup(EXIT_FAILURE);
-	}
-
-	if(config->sysroot && (chroot(config->sysroot) != 0 || chdir("/") != 0)) {
-		pm_printf(ALPM_LOG_ERROR,
-				_("chroot to '%s' failed: (%s)\n"), config->sysroot, strerror(errno));
 		cleanup(EXIT_FAILURE);
 	}
 
@@ -1181,6 +1184,12 @@ int main(int argc, char *argv[])
 			pm_printf(ALPM_LOG_ERROR, _("argument '-' specified without input on stdin\n"));
 			cleanup(1);
 		}
+	}
+
+	if(config->sysroot && (chroot(config->sysroot) != 0 || chdir("/") != 0)) {
+		pm_printf(ALPM_LOG_ERROR,
+				_("chroot to '%s' failed: (%s)\n"), config->sysroot, strerror(errno));
+		cleanup(EXIT_FAILURE);
 	}
 
 	pm_printf(ALPM_LOG_DEBUG, "pacman v%s - libalpm v%s\n", PACKAGE_VERSION, alpm_version());

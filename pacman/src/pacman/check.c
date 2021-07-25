@@ -1,7 +1,7 @@
 /*
  *  check.c
  *
- *  Copyright (c) 2012-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2012-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -176,19 +176,78 @@ static int check_file_size(const char *pkgname, const char *filepath,
 	return 0;
 }
 
-/* placeholders - libarchive currently does not read checksums from mtree files
-static int check_file_md5sum(const char *pkgname, const char *filepath,
-		struct stat *st, struct archive_entry *entry, int backup)
+#if ARCHIVE_VERSION_NUMBER >= 3005000
+static int check_file_cksum(const char *pkgname, const char *filepath,
+		int backup, const char *cksum_name, const char *cksum_calc, const char *cksum_mtree)
 {
+	if(!cksum_calc) {
+		if(!config->quiet) {
+			pm_printf(ALPM_LOG_WARNING, _("%s: %s (failed to calculate %s checksum)\n"),
+					pkgname, filepath, cksum_name);
+		}
+		return 1;
+	}
+
+	if(!cksum_mtree) {
+		if(!config->quiet) {
+			pm_printf(ALPM_LOG_WARNING, _("%s: %s (%s checksum information not available)\n"),
+					pkgname, filepath, cksum_name);
+		}
+		return 1;
+	}
+
+	if(strcmp(cksum_calc, cksum_mtree) != 0) {
+		if(backup) {
+			if(!config->quiet) {
+				printf("%s%s%s: ", config->colstr.title, _("backup file"),
+						config->colstr.nocolor);
+				printf(_("%s: %s (%s checksum mismatch)\n"),
+						pkgname, filepath, cksum_name);
+			}
+			return 0;
+		}
+		if(!config->quiet) {
+			pm_printf(ALPM_LOG_WARNING, _("%s: %s (%s checksum mismatch)\n"),
+					pkgname, filepath, cksum_name);
+		}
+		return 1;
+	}
+
 	return 0;
+}
+#endif
+
+static int check_file_md5sum(const char *pkgname, const char *filepath,
+		struct archive_entry *entry, int backup)
+{
+	int errors = 0;
+#if ARCHIVE_VERSION_NUMBER >= 3005000
+	char *cksum_calc = alpm_compute_md5sum(filepath);
+	char *cksum_mtree = hex_representation(archive_entry_digest(entry,
+													ARCHIVE_ENTRY_DIGEST_MD5), 16);
+	errors = check_file_cksum(pkgname, filepath, backup, "MD5", cksum_calc,
+									cksum_mtree);
+	free(cksum_mtree);
+	free(cksum_calc);
+#endif
+	return (errors != 0 ? 1 : 0);
 }
 
 static int check_file_sha256sum(const char *pkgname, const char *filepath,
-		struct stat *st, struct archive_entry *entry, int backup)
+		struct archive_entry *entry, int backup)
 {
-	return 0;
+	int errors = 0;
+#if ARCHIVE_VERSION_NUMBER >= 3005000
+	char *cksum_calc = alpm_compute_sha256sum(filepath);
+	char *cksum_mtree = hex_representation(archive_entry_digest(entry,
+													ARCHIVE_ENTRY_DIGEST_SHA256), 32);
+	errors = check_file_cksum(pkgname, filepath, backup, "SHA256", cksum_calc,
+									cksum_mtree);
+	free(cksum_mtree);
+	free(cksum_calc);
+#endif
+	return (errors != 0 ? 1 : 0);
 }
-*/
 
 /* Loop through the files of the package to check if they exist. */
 int check_pkg_fast(alpm_pkg_t *pkg)
@@ -277,7 +336,7 @@ int check_pkg_full(alpm_pkg_t *pkg)
 		return 0;
 	}
 
-	while(alpm_pkg_mtree_next(pkg, mtree, &entry) == ARCHIVE_OK) {
+	while(alpm_pkg_mtree_next(pkg, mtree, &entry) == 0) {
 		struct stat st;
 		const char *path = archive_entry_pathname(entry);
 		char filepath[PATH_MAX];
@@ -369,7 +428,8 @@ int check_pkg_full(alpm_pkg_t *pkg)
 
 		if(type == AE_IFREG) {
 			file_errors += check_file_size(pkgname, filepath, &st, entry, backup);
-			/* file_errors += check_file_md5sum(pkgname, filepath, &st, entry, backup); */
+			file_errors += check_file_md5sum(pkgname, filepath, entry, backup);
+			file_errors += check_file_sha256sum(pkgname, filepath, entry, backup);
 		}
 
 		if(config->quiet && file_errors) {

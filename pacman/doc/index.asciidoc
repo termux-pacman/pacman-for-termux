@@ -77,7 +77,8 @@ Releases
 [frame="topbot",grid="none",options="header,autowidth"]
 !======
 !Version !Date
-!5.2.2  !2020-06-23
+!6.0.0  !2021-05-20
+!6.0.0alpha1 !2020-12-04
 !5.2.1  !2019-11-01
 !5.2.0  !2019-10-21
 !5.1.3  !2019-03-01
@@ -194,11 +195,11 @@ link:https://sources.archlinux.org/other/pacman/[]. To install, download the new
 available source tarball, unpack it in a directory, and run the three magic
 commands:
 
-	$ ./configure
-	$ make
-	# make install
+	$ meson build
+	$ ninja -C build
+	# ninja -C build install
 
-You may wish to read the options presented by `./configure --help` in order to
+You may wish to read the options presented by `meson` in order to
 set appropriate paths and build options that are correct for your system.
 
 Development
@@ -240,7 +241,7 @@ Other Utilities
 ~~~~~~~~~~~~~~~
 Although the package manager itself is quite simple, many scripts have been
 developed that help automate building and installing packages. These are used
-extensively in link:https://www.archlinux.org/[Arch Linux]. Most of these utilities
+extensively in link:https://archlinux.org/[Arch Linux]. Most of these utilities
 are available in the Arch Linux projects
 link:https://git.archlinux.org/[code browser].
 
@@ -263,7 +264,7 @@ bugs under the Pacman project.
 
 Copyright
 ---------
-pacman is Copyright (C) 2006-2020 Pacman Development Team
+pacman is Copyright (C) 2006-2021 Pacman Development Team
 <pacman-dev@archlinux.org> and Copyright (C) 2002-2006 Judd Vinet
 <jvinet@zeroflux.org> and is licensed through the GNU General Public License,
 version 2 or later.

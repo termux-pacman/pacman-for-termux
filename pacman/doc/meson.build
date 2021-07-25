@@ -9,7 +9,6 @@ manpages = [
   { 'name': 'PKGBUILD.5', 'extra_depends' : [ 'PKGBUILD-example.txt' ] },
   { 'name': 'makepkg.conf.5' },
   { 'name': 'pacman.conf.5' },
-  { 'name': 'libalpm.3' },
   { 'name': 'BUILDINFO.5' },
   { 'name': 'pacman-conf.8' },
 ]
@@ -129,9 +128,14 @@ meson.add_install_script(MESON_MAKE_SYMLINK,
                          'repo-add.8',
                          join_paths(MANDIR, 'man8/repo-remove.8'))
 
+meson.add_install_script(MESON_MAKE_SYMLINK,
+                         'alpm-hooks.5',
+                         join_paths(MANDIR, 'man5/pacman-hooks.5'))
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 if doxygen.found() and not get_option('doxygen').disabled()
   doxyconf = configuration_data()
+  doxyconf.set('INPUT_DIRECTORY', meson.current_source_dir())
   doxyconf.set('OUTPUT_DIRECTORY', meson.current_build_dir())
   doxyfile = configure_file(
     input : 'Doxyfile.in',

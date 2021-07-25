@@ -1,7 +1,7 @@
 /*
  *  db.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2006 by Miklos Vajna <vmiklos@frugalware.org>
@@ -70,7 +70,7 @@ struct __alpm_db_t {
 	alpm_pkghash_t *pkgcache;
 	alpm_list_t *grpcache;
 	alpm_list_t *servers;
-	struct db_operations *ops;
+	const struct db_operations *ops;
 
 	/* bitfields for validity, local, loaded caches, etc. */
 	/* From _alpm_dbstatus_t */
@@ -87,7 +87,8 @@ alpm_db_t *_alpm_db_new(const char *treename, int is_local);
 void _alpm_db_free(alpm_db_t *db);
 const char *_alpm_db_path(alpm_db_t *db);
 int _alpm_db_cmp(const void *d1, const void *d2);
-alpm_list_t *_alpm_db_search(alpm_db_t *db, const alpm_list_t *needles);
+int _alpm_db_search(alpm_db_t *db, const alpm_list_t *needles,
+		alpm_list_t **ret);
 alpm_db_t *_alpm_db_register_local(alpm_handle_t *handle);
 alpm_db_t *_alpm_db_register_sync(alpm_handle_t *handle, const char *treename,
 		int level);

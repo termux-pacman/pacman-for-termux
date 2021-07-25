@@ -1,7 +1,7 @@
 /*
  *  sync.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 #include "pacman.h"
 #include "util.h"
 #include "package.h"
+#include "callback.h"
 #include "conf.h"
 
 static int unlink_verbose(const char *pathname, int ignore_missing)
@@ -104,7 +105,7 @@ static int sync_cleandb(const char *dbpath)
 			dbname = strndup(dname, len - 7);
 		} else if(len > 6 && strcmp(dname + len - 6, ".files") == 0) {
 			dbname = strndup(dname, len - 6);
-		} else if(len > 6 && strcmp(dname + len - 6, ".files.sig") == 0) {
+		} else if(len > 10 && strcmp(dname + len - 10, ".files.sig") == 0) {
 			dbname = strndup(dname, len - 10);
 		} else {
 			ret += unlink_verbose(path, 0);
@@ -311,7 +312,15 @@ static int sync_search(alpm_list_t *syncs, alpm_list_t *targets)
 
 	for(i = syncs; i; i = alpm_list_next(i)) {
 		alpm_db_t *db = i->data;
-		found += !dump_pkg_search(db, targets, 1);
+		int ret = dump_pkg_search(db, targets, 1);
+
+		if(ret == -1) {
+			alpm_errno_t err = alpm_errno(config->handle);
+			pm_printf(ALPM_LOG_ERROR, "search failed: %s\n", alpm_strerror(err));
+			return 1;
+		}
+
+		found += !ret;
 	}
 
 	return (found == 0);
@@ -816,6 +825,7 @@ int sync_prepare_execute(void)
 		goto cleanup;
 	}
 
+	multibar_move_completed_up(true);
 	if(alpm_trans_commit(config->handle, &data) == -1) {
 		alpm_errno_t err = alpm_errno(config->handle);
 		pm_printf(ALPM_LOG_ERROR, _("failed to commit transaction (%s)\n"),
@@ -854,7 +864,7 @@ int sync_prepare_execute(void)
 			default:
 				break;
 		}
-		// TODO: stderr?
+		/* TODO: stderr? */
 		printf(_("Errors occurred, no packages were upgraded.\n"));
 		retval = 1;
 		goto cleanup;

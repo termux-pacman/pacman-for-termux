@@ -1,7 +1,7 @@
 /*
  *  alpm.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -32,19 +32,6 @@
 #include "log.h"
 #include "util.h"
 
-/** \addtogroup alpm_interface Interface Functions
- * @brief Functions to initialize and release libalpm
- * @{
- */
-
-/** Initializes the library.
- * Creates handle, connects to database and creates lockfile.
- * This must be called before any other functions are called.
- * @param root the root path for all filesystem operations
- * @param dbpath the absolute path to the libalpm database
- * @param err an optional variable to hold any error return codes
- * @return a context handle on success, NULL on error, err will be set if provided
- */
 alpm_handle_t SYMEXPORT *alpm_initialize(const char *root, const char *dbpath,
 		alpm_errno_t *err)
 {
@@ -83,6 +70,13 @@ alpm_handle_t SYMEXPORT *alpm_initialize(const char *root, const char *dbpath,
 		goto cleanup;
 	}
 
+#ifdef HAVE_LIBCURL
+	curl_global_init(CURL_GLOBAL_ALL);
+	myhandle->curlm = curl_multi_init();
+#endif
+
+	myhandle->parallel_downloads = 1;
+
 #ifdef ENABLE_NLS
 	bindtextdomain("libalpm", LOCALEDIR);
 #endif
@@ -99,14 +93,6 @@ cleanup:
 	return NULL;
 }
 
-/** Release the library.
- * Disconnects from the database, removes handle and lockfile
- * This should be the last alpm call you make.
- * After this returns, handle should be considered invalid and cannot be reused
- * in any way.
- * @param myhandle the context handle
- * @return 0 on success, -1 on error
- */
 int SYMEXPORT alpm_release(alpm_handle_t *myhandle)
 {
 	int ret = 0;
@@ -125,33 +111,23 @@ int SYMEXPORT alpm_release(alpm_handle_t *myhandle)
 		ret = -1;
 	}
 
+#ifdef HAVE_LIBCURL
+	curl_multi_cleanup(myhandle->curlm);
+	curl_global_cleanup();
+	FREELIST(myhandle->server_errors);
+#endif
+
 	_alpm_handle_unlock(myhandle);
 	_alpm_handle_free(myhandle);
-
-#ifdef HAVE_LIBCURL
-	curl_global_cleanup();
-#endif
 
 	return ret;
 }
 
-/** @} */
-
-/** @defgroup alpm_misc Miscellaneous Functions
- * @brief Various libalpm functions
- */
-
-/** Get the version of library.
- * @return the library version, e.g. "6.0.4"
- * */
 const char SYMEXPORT *alpm_version(void)
 {
 	return LIB_VERSION;
 }
 
-/** Get the capabilities of the library.
- * @return a bitmask of the capabilities
- * */
 int SYMEXPORT alpm_capabilities(void)
 {
 	return 0

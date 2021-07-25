@@ -1,5 +1,5 @@
 #  Copyright (c) 2006 by Aurelien Foret <orelien@chez.com>
-#  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+#  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -122,11 +122,10 @@ def mkcfgfile(filename, root, option, db):
     for key in sorted(db.keys()):
         if key != "local":
             value = db[key]
-            data.append("[%s]\n" \
-                    "SigLevel = %s\n" \
-                    "Server = file://%s" \
-                     % (value.treename, value.getverify(), \
-                        os.path.join(root, SYNCREPO, value.treename)))
+            data.append("[%s]\n" % (value.treename))
+            data.append("SigLevel = %s\n" % (value.getverify()))
+            if value.syncdir:
+                data.append("Server = file://%s" % (os.path.join(root, SYNCREPO, value.treename)))
             for optkey, optval in value.option.items():
                 data.extend(["%s = %s" % (optkey, j) for j in optval])
 

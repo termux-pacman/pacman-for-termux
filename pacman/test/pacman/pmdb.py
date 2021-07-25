@@ -1,5 +1,5 @@
 #  Copyright (c) 2006 by Aurelien Foret <orelien@chez.com>
-#  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+#  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ class pmdb(object):
         self.root = root
         self.pkgs = []
         self.option = {}
+        self.syncdir = True
         if self.treename == "local":
             self.dbdir = os.path.join(root, util.PM_DBPATH, treename)
             self.dbfile = None

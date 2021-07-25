@@ -1,7 +1,7 @@
 /*
  *  util.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -101,6 +101,28 @@ int trans_release(void)
 	return 0;
 }
 
+int needs_root(void)
+{
+	if(config->sysroot) {
+		return 1;
+	}
+	switch(config->op) {
+		case PM_OP_DATABASE:
+			return !config->op_q_check;
+		case PM_OP_UPGRADE:
+		case PM_OP_REMOVE:
+			return !config->print;
+		case PM_OP_SYNC:
+			return (config->op_s_clean || config->op_s_sync ||
+					(!config->group && !config->op_s_info && !config->op_q_list &&
+					 !config->op_s_search && !config->print));
+		case PM_OP_FILES:
+			return config->op_s_sync;
+		default:
+			return 0;
+	}
+}
+
 int check_syncdbs(size_t need_repos, int check_valid)
 {
 	int ret = 0;
@@ -128,26 +150,17 @@ int check_syncdbs(size_t need_repos, int check_valid)
 
 int sync_syncdbs(int level, alpm_list_t *syncs)
 {
-	alpm_list_t *i;
-	unsigned int success = 1;
+	int ret;
+	int force = (level < 2 ? 0 : 1);
 
-	for(i = syncs; i; i = alpm_list_next(i)) {
-		alpm_db_t *db = i->data;
-
-		int ret = alpm_db_update((level < 2 ? 0 : 1), db);
-		if(ret < 0) {
-			pm_printf(ALPM_LOG_ERROR, _("failed to update %s (%s)\n"),
-					alpm_db_get_name(db), alpm_strerror(alpm_errno(config->handle)));
-			success = 0;
-		} else if(ret == 1) {
-			printf(_(" %s is up to date\n"), alpm_db_get_name(db));
-		}
+	multibar_move_completed_up(false);
+	ret = alpm_db_update(config->handle, syncs, force);
+	if(ret < 0) {
+		pm_printf(ALPM_LOG_ERROR, _("failed to synchronize all databases (%s)\n"),
+			alpm_strerror(alpm_errno(config->handle)));
 	}
 
-	if(!success) {
-		pm_printf(ALPM_LOG_ERROR, _("failed to synchronize all databases\n"));
-	}
-	return (success > 0);
+	return (ret >= 0);
 }
 
 /* discard unhandled input on the terminal's input buffer */
@@ -393,12 +406,34 @@ static size_t string_length(const char *s)
 	if(!s || s[0] == '\0') {
 		return 0;
 	}
-	/* len goes from # bytes -> # chars -> # cols */
-	len = strlen(s) + 1;
-	wcstr = calloc(len, sizeof(wchar_t));
-	len = mbstowcs(wcstr, s, len);
-	len = wcswidth(wcstr, len);
-	free(wcstr);
+	if(strstr(s, "\033")) {
+		char* replaced = malloc(sizeof(char) * strlen(s));
+		int iter = 0;
+		for(; *s; s++) {
+			if(*s == '\033') {
+				while(*s != 'm') {
+					s++;
+				}
+			} else {
+				replaced[iter] = *s;
+				iter++;
+			}
+		}
+		replaced[iter] = '\0';
+		len = iter;
+		wcstr = calloc(len, sizeof(wchar_t));
+		len = mbstowcs(wcstr, replaced, len);
+		len = wcswidth(wcstr, len);
+		free(wcstr);
+		free(replaced);
+	} else {
+		/* len goes from # bytes -> # chars -> # cols */
+		len = strlen(s) + 1;
+		wcstr = calloc(len, sizeof(wchar_t));
+		len = mbstowcs(wcstr, s, len);
+		len = wcswidth(wcstr, len);
+		free(wcstr);
+	}
 
 	return len;
 }
@@ -471,7 +506,7 @@ void string_display(const char *title, const char *string, unsigned short cols)
 }
 
 static void table_print_line(const alpm_list_t *line, short col_padding,
-		size_t colcount, size_t *widths, int *has_data)
+		size_t colcount, const size_t *widths, const int *has_data)
 {
 	size_t i;
 	int need_padding = 0;
@@ -487,7 +522,9 @@ static void table_print_line(const alpm_list_t *line, short col_padding,
 			continue;
 		}
 
-		cell_width = (cell->mode & CELL_RIGHT_ALIGN ? (int)widths[i] : -(int)widths[i]);
+		/* calculate cell width, adjusting for multi-byte character strings */
+		cell_width = (int)widths[i] - string_length(str) + strlen(str);
+		cell_width = cell->mode & CELL_RIGHT_ALIGN ? cell_width : -cell_width;
 
 		if(need_padding) {
 			printf("%*s", col_padding, "");
@@ -883,14 +920,14 @@ static void _display_targets(alpm_list_t *targets, int verbose)
 		}
 
 		if(target->install) {
-			pm_asprintf(&str, "%s-%s", alpm_pkg_get_name(target->install),
-					alpm_pkg_get_version(target->install));
+			pm_asprintf(&str, "%s%s-%s%s", alpm_pkg_get_name(target->install), config->colstr.faint,
+					alpm_pkg_get_version(target->install), config->colstr.nocolor);
 		} else if(isize == 0) {
-			pm_asprintf(&str, "%s-%s", alpm_pkg_get_name(target->remove),
-					alpm_pkg_get_version(target->remove));
+			pm_asprintf(&str, "%s%s-%s%s", alpm_pkg_get_name(target->remove), config->colstr.faint,
+					alpm_pkg_get_version(target->remove), config->colstr.nocolor);
 		} else {
-			pm_asprintf(&str, "%s-%s [%s]", alpm_pkg_get_name(target->remove),
-					alpm_pkg_get_version(target->remove), _("removal"));
+			pm_asprintf(&str, "%s%s-%s %s[%s]%s", alpm_pkg_get_name(target->remove), config->colstr.faint,
+					alpm_pkg_get_version(target->remove), config->colstr.nocolor, _("removal"), config->colstr.nocolor);
 		}
 		names = alpm_list_add(names, str);
 	}
@@ -1032,6 +1069,7 @@ static char *pkg_get_location(alpm_pkg_t *pkg)
 			}
 
 			/* fallthrough - for theoretical serverless repos */
+			__attribute__((fallthrough));
 
 		case ALPM_PKG_FROM_FILE:
 			return strdup(alpm_pkg_get_filename(pkg));
@@ -1369,6 +1407,27 @@ static int multiselect_parse(char *array, int count, char *response)
 	return 0;
 }
 
+void console_cursor_hide(void) {
+	if(isatty(fileno(stdout))) {
+		printf(CURSOR_HIDE_ANSICODE);
+	}
+}
+
+void console_cursor_show(void) {
+	if(isatty(fileno(stdout))) {
+		printf(CURSOR_SHOW_ANSICODE);
+	}
+}
+
+char *safe_fgets_stdin(char *s, int size)
+{
+	char *result;
+	console_cursor_show();
+	result = safe_fgets(s, size, stdin);
+	console_cursor_hide();
+	return result;
+}
+
 int multiselect_question(char *array, int count)
 {
 	char *response, *lastchar;
@@ -1405,7 +1464,7 @@ int multiselect_question(char *array, int count)
 
 		flush_term_input(fileno(stdin));
 
-		if(safe_fgets(response, response_len, stdin)) {
+		if(safe_fgets_stdin(response, response_len)) {
 			const size_t response_incr = 64;
 			size_t len;
 			/* handle buffer not being large enough to read full line case */
@@ -1421,8 +1480,8 @@ int multiselect_question(char *array, int count)
 				lastchar = response + response_len - 1;
 				/* sentinel byte */
 				*lastchar = 1;
-				if(safe_fgets(response + response_len - response_incr - 1,
-							response_incr + 1, stdin) == 0) {
+				if(safe_fgets_stdin(response + response_len - response_incr - 1,
+							response_incr + 1) == 0) {
 					free(response);
 					return -1;
 				}
@@ -1472,7 +1531,7 @@ int select_question(int count)
 
 		flush_term_input(fileno(stdin));
 
-		if(safe_fgets(response, sizeof(response), stdin)) {
+		if(safe_fgets_stdin(response, sizeof(response))) {
 			size_t len = strtrim(response);
 			if(len > 0) {
 				int n;
@@ -1560,7 +1619,7 @@ static int question(short preset, const char *format, va_list args)
 
 	flush_term_input(fd_in);
 
-	if(safe_fgets(response, sizeof(response), stdin)) {
+	if(safe_fgets_stdin(response, sizeof(response))) {
 		size_t len = strtrim(response);
 		if(len == 0) {
 			return preset;
@@ -1771,4 +1830,22 @@ char *arg_to_string(int argc, char *argv[])
 	}
 	strcpy(p, argv[i]);
 	return cl_text;
+}
+
+/* Moves console cursor `lines` up */
+void console_cursor_move_up(unsigned int lines)
+{
+	printf("\x1B[%dF", lines);
+}
+
+/* Moves console cursor `lines` down */
+void console_cursor_move_down(unsigned int lines)
+{
+	printf("\x1B[%dE", lines);
+}
+
+/* Erases line from the current cursor position till the end of the line */
+void console_erase_line(void)
+{
+	printf("\x1B[K");
 }

@@ -1,7 +1,7 @@
 /*
  *  util.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -33,6 +33,7 @@
 #include <sys/socket.h>
 #include <fnmatch.h>
 #include <poll.h>
+#include <signal.h>
 
 /* libarchive */
 #include <archive.h>
@@ -350,7 +351,8 @@ int _alpm_unpack(alpm_handle_t *handle, const char *path, const char *prefix,
 
 		/* If specific files were requested, skip entries that don't match. */
 		if(list) {
-			char *entry_prefix = strdup(entryname);
+			char *entry_prefix = NULL;
+			STRDUP(entry_prefix, entryname, ret = 1; goto cleanup);
 			char *p = strstr(entry_prefix,"/");
 			if(p) {
 				*(p + 1) = '\0';
@@ -556,12 +558,18 @@ static void _alpm_reset_signals(void)
 	int *i, signals[] = {
 		SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL,
 		SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSTOP, SIGTERM, SIGTSTP,
-		SIGTTIN, SIGTTOU, SIGUSR1, SIGUSR2, SIGPOLL, SIGPROF, SIGSYS, SIGTRAP,
-		SIGURG, SIGVTALRM, SIGXCPU, SIGXFSZ,
+		SIGTTIN, SIGTTOU, SIGUSR1, SIGUSR2, SIGPROF, SIGSYS, SIGTRAP, SIGURG,
+		SIGVTALRM, SIGXCPU, SIGXFSZ,
+#if defined(SIGPOLL)
+		/* Not available on FreeBSD et al. */
+		SIGPOLL,
+#endif
 		0
 	};
 	struct sigaction def;
+	def.sa_flags = 0;
 	def.sa_handler = SIG_DFL;
+	sigemptyset(&def.sa_mask);
 	for(i = signals; *i; i++) {
 		sigaction(*i, &def, NULL);
 	}
@@ -590,6 +598,13 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 	OPEN(cwdfd, ".", O_RDONLY | O_CLOEXEC);
 	if(cwdfd < 0) {
 		_alpm_log(handle, ALPM_LOG_ERROR, _("could not get current working directory\n"));
+	}
+
+	/* just in case our cwd was removed in the upgrade operation */
+	if(chdir(handle->root) != 0) {
+		_alpm_log(handle, ALPM_LOG_ERROR, _("could not change directory to %s (%s)\n"),
+				handle->root, strerror(errno));
+		goto cleanup;
 	}
 
 	_alpm_log(handle, ALPM_LOG_DEBUG, "executing \"%s\" under chroot \"%s\"\n",
@@ -635,10 +650,6 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 		}
 
 		/* use fprintf instead of _alpm_log to send output through the parent */
-		/*if(chroot(handle->root) != 0) {
-			fprintf(stderr, _("could not change the root directory (%s)\n"), strerror(errno));
-			exit(1);
-		}*/
 		if(chdir("/") != 0) {
 			fprintf(stderr, _("could not change directory to %s (%s)\n"),
 					"/", strerror(errno));
@@ -826,6 +837,20 @@ char *_alpm_filecache_find(alpm_handle_t *handle, const char *filename)
 	return NULL;
 }
 
+/** Check whether a filename exists in a registered alpm cachedir.
+ * @param handle the context handle
+ * @param filename name of file to find
+ * @return 0 if the filename was not found, 1 otherwise
+ */
+int _alpm_filecache_exists(alpm_handle_t *handle, const char *filename)
+{
+	int res;
+	char *fpath = _alpm_filecache_find(handle, filename);
+	res = (fpath != NULL);
+	FREE(fpath);
+	return res;
+}
+
 /** Check the alpm cachedirs for existence and find a writable one.
  * If no valid cache directory can be found, use /tmp.
  * @param handle the context handle
@@ -992,35 +1017,6 @@ static int sha256_file(const char *path, unsigned char output[32])
 }
 #endif /* HAVE_LIBSSL || HAVE_LIBNETTLE */
 
-/** Create a string representing bytes in hexadecimal.
- * @param bytes the bytes to represent in hexadecimal
- * @param size number of bytes to consider
- * @return a NULL terminated string with the hexadecimal representation of
- * bytes or NULL on error. This string must be freed.
- */
-static char *hex_representation(unsigned char *bytes, size_t size)
-{
-	static const char *hex_digits = "0123456789abcdef";
-	char *str;
-	size_t i;
-
-	MALLOC(str, 2 * size + 1, return NULL);
-
-	for(i = 0; i < size; i++) {
-		str[2 * i] = hex_digits[bytes[i] >> 4];
-		str[2 * i + 1] = hex_digits[bytes[i] & 0x0f];
-	}
-
-	str[2 * size] = '\0';
-
-	return str;
-}
-
-/** Get the md5 sum of file.
- * @param filename name of the file
- * @return the checksum on success, NULL on error
- * @addtogroup alpm_misc
- */
 char SYMEXPORT *alpm_compute_md5sum(const char *filename)
 {
 	unsigned char output[16];
@@ -1034,11 +1030,6 @@ char SYMEXPORT *alpm_compute_md5sum(const char *filename)
 	return hex_representation(output, 16);
 }
 
-/** Get the sha256 sum of file.
- * @param filename name of the file
- * @return the checksum on success, NULL on error
- * @addtogroup alpm_misc
- */
 char SYMEXPORT *alpm_compute_sha256sum(const char *filename)
 {
 	unsigned char output[32];
@@ -1184,7 +1175,7 @@ cleanup:
 	{
 		int ret = b->ret;
 		FREE(b->line);
-		memset(b, 0, sizeof(struct archive_read_buffer));
+		*b = (struct archive_read_buffer){0};
 		return ret;
 	}
 }
@@ -1430,22 +1421,15 @@ int _alpm_fnmatch(const void *pattern, const void *string)
  */
 void *_alpm_realloc(void **data, size_t *current, const size_t required)
 {
-	char *newdata;
-
-	newdata = realloc(*data, required);
-	if(!newdata) {
-		_alpm_alloc_fail(required);
-		return NULL;
-	}
+	REALLOC(*data, required, return NULL);
 
 	if (*current < required) {
 		/* ensure all new memory is zeroed out, in both the initial
 		 * allocation and later reallocs */
-		memset(newdata + *current, 0, required - *current);
+		memset((char*)*data + *current, 0, required - *current);
 	}
 	*current = required;
-	*data = newdata;
-	return newdata;
+	return *data;
 }
 
 /** This automatically grows data based on current/required.
@@ -1483,4 +1467,41 @@ void *_alpm_greedy_grow(void **data, size_t *current, const size_t required)
 void _alpm_alloc_fail(size_t size)
 {
 	fprintf(stderr, "alloc failure: could not allocate %zu bytes\n", size);
+}
+
+/** This functions reads file content.
+ *
+ * Memory buffer is allocated by the callee function. It is responsibility
+ * of the caller to free the buffer.
+ *
+ * @param filepath filepath to read
+ * @param data pointer to output buffer
+ * @param data_len size of the output buffer
+ * @return error code for the operation
+ */
+alpm_errno_t _alpm_read_file(const char *filepath, unsigned char **data, size_t *data_len)
+{
+	struct stat st;
+	FILE *fp;
+
+	if((fp = fopen(filepath, "rb")) == NULL) {
+		return ALPM_ERR_NOT_A_FILE;
+	}
+
+	if(fstat(fileno(fp), &st) != 0) {
+		fclose(fp);
+		return ALPM_ERR_NOT_A_FILE;
+	}
+	*data_len = st.st_size;
+
+	MALLOC(*data, *data_len, fclose(fp); return ALPM_ERR_MEMORY);
+
+	if(fread(*data, *data_len, 1, fp) != 1) {
+		FREE(*data);
+		fclose(fp);
+		return ALPM_ERR_SYSTEM;
+	}
+
+	fclose(fp);
+	return ALPM_ERR_OK;
 }

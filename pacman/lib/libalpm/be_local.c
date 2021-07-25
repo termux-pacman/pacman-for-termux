@@ -1,7 +1,7 @@
 /*
  *  be_local.c : backend for the local database
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -256,8 +256,7 @@ static struct archive *_cache_mtree_open(alpm_pkg_t *pkg)
 	}
 
 	if((mtree = archive_read_new()) == NULL) {
-		pkg->handle->pm_errno = ALPM_ERR_LIBARCHIVE;
-		goto error;
+		GOTO_ERR(pkg->handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	_alpm_archive_read_support_filter_all(mtree);
@@ -266,9 +265,8 @@ static struct archive *_cache_mtree_open(alpm_pkg_t *pkg)
 	if((r = _alpm_archive_read_open_file(mtree, mtfile, ALPM_BUFFER_SIZE))) {
 		_alpm_log(pkg->handle, ALPM_LOG_ERROR, _("error while reading file %s: %s\n"),
 					mtfile, archive_error_string(mtree));
-		pkg->handle->pm_errno = ALPM_ERR_LIBARCHIVE;
 		_alpm_archive_read_free(mtree);
-		goto error;
+		GOTO_ERR(pkg->handle, ALPM_ERR_LIBARCHIVE, error);
 	}
 
 	free(mtfile);
@@ -284,12 +282,26 @@ error:
  * @param pkg the package that the mtree file is being read from
  * @param archive the archive structure reading from the mtree file
  * @param entry an archive_entry to store the entry header information
- * @return 0 if end of archive is reached, non-zero otherwise.
+ * @return 0 on success, 1 if end of archive is reached, -1 otherwise.
  */
 static int _cache_mtree_next(const alpm_pkg_t UNUSED *pkg,
 		struct archive *mtree, struct archive_entry **entry)
 {
-	return archive_read_next_header(mtree, entry);
+	int ret;
+	ret = archive_read_next_header(mtree, entry);
+
+	switch(ret) {
+		case ARCHIVE_OK:
+			return 0;
+			break;
+		case ARCHIVE_EOF:
+			return 1;
+			break;
+		default:
+			break;
+	}
+
+	return -1;
 }
 
 /**
@@ -314,7 +326,7 @@ static int _cache_force_load(alpm_pkg_t *pkg)
  * lazy accessor methods that handle any backend loading and caching
  * logic.
  */
-static struct pkg_operations local_pkg_ops = {
+static const struct pkg_operations local_pkg_ops = {
 	.get_base = _cache_get_base,
 	.get_desc = _cache_get_desc,
 	.get_url = _cache_get_url,
@@ -680,7 +692,7 @@ char *_alpm_local_db_pkgpath(alpm_db_t *db, alpm_pkg_t *info,
 static int local_db_read(alpm_pkg_t *info, int inforeq)
 {
 	FILE *fp = NULL;
-	char line[1024];
+	char line[1024] = {0};
 	alpm_db_t *db = info->origin_data.db;
 
 	/* bitmask logic here:
@@ -702,9 +714,6 @@ static int local_db_read(alpm_pkg_t *info, int inforeq)
 	_alpm_log(db->handle, ALPM_LOG_FUNCTION,
 			"loading package data for %s : level=0x%x\n",
 			info->name, inforeq);
-
-	/* clear out 'line', to be certain - and to make valgrind happy */
-	memset(line, 0, sizeof(line));
 
 	/* DESC */
 	if(inforeq & INFRQ_DESC && !(info->infolevel & INFRQ_DESC)) {
@@ -832,12 +841,7 @@ static int local_db_read(alpm_pkg_t *info, int inforeq)
 				}
 				/* attempt to hand back any memory we don't need */
 				if(files_count > 0) {
-					alpm_file_t *newfiles;
-
-					newfiles = realloc(files, sizeof(alpm_file_t) * files_count);
-					if(newfiles != NULL) {
-						files = newfiles;
-					}
+					REALLOC(files, sizeof(alpm_file_t) * files_count, (void)0);
 				} else {
 					FREE(files);
 				}
@@ -1154,7 +1158,7 @@ int SYMEXPORT alpm_pkg_set_reason(alpm_pkg_t *pkg, alpm_pkgreason_t reason)
 	return 0;
 }
 
-struct db_operations local_db_ops = {
+static const struct db_operations local_db_ops = {
 	.validate         = local_db_validate,
 	.populate         = local_db_populate,
 	.unregister       = _alpm_db_unregister,

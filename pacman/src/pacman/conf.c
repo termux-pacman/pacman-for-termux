@@ -1,7 +1,7 @@
 /*
  *  conf.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 #include <sys/utsname.h> /* uname */
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 
 /* pacman */
 #include "conf.h"
@@ -62,6 +63,7 @@ config_t *config = NULL;
 #define BOLDMAGENTA   "\033[1;35m"
 #define BOLDCYAN      "\033[1;36m"
 #define BOLDWHITE     "\033[1;37m"
+#define GREY46        "\033[38;5;243m"
 
 void enable_colors(int colors)
 {
@@ -72,18 +74,22 @@ void enable_colors(int colors)
 		colstr->title   = BOLD;
 		colstr->repo    = BOLDMAGENTA;
 		colstr->version = BOLDGREEN;
+		colstr->groups  = BOLDBLUE;
 		colstr->meta    = BOLDCYAN;
 		colstr->warn    = BOLDYELLOW;
 		colstr->err     = BOLDRED;
+		colstr->faint   = GREY46;
 		colstr->nocolor = NOCOLOR;
 	} else {
 		colstr->colon   = ":: ";
 		colstr->title   = "";
 		colstr->repo    = "";
 		colstr->version = "";
+		colstr->groups  = "";
 		colstr->meta    = "";
 		colstr->warn    = "";
 		colstr->err     = "";
+		colstr->faint   = "";
 		colstr->nocolor = "";
 	}
 }
@@ -109,13 +115,17 @@ config_t *config_new(void)
 		newconfig->remotefilesiglevel = ALPM_SIG_USE_DEFAULT;
 	}
 
+	/* by default use 1 download stream */
+	newconfig->parallel_downloads = 1;
 	newconfig->colstr.colon   = ":: ";
 	newconfig->colstr.title   = "";
 	newconfig->colstr.repo    = "";
 	newconfig->colstr.version = "";
+	newconfig->colstr.groups  = "";
 	newconfig->colstr.meta    = "";
 	newconfig->colstr.warn    = "";
 	newconfig->colstr.err     = "";
+	newconfig->colstr.faint   = "";
 	newconfig->colstr.nocolor = "";
 
 	return newconfig;
@@ -135,6 +145,7 @@ int config_free(config_t *oldconfig)
 
 	FREELIST(oldconfig->holdpkg);
 	FREELIST(oldconfig->ignorepkg);
+	FREELIST(oldconfig->ignoregrp);
 	FREELIST(oldconfig->assumeinstalled);
 	FREELIST(oldconfig->noupgrade);
 	FREELIST(oldconfig->noextract);
@@ -148,7 +159,7 @@ int config_free(config_t *oldconfig)
 	FREELIST(oldconfig->cachedirs);
 	free(oldconfig->xfercommand);
 	free(oldconfig->print_format);
-	free(oldconfig->arch);
+	FREELIST(oldconfig->architectures);
 	wordsplit_free(oldconfig->xfercommand_argv);
 	free(oldconfig);
 
@@ -267,8 +278,8 @@ static int systemvp(const char *file, char *const argv[])
 }
 
 /** External fetch callback */
-static int download_with_xfercommand(const char *url, const char *localpath,
-		int force)
+static int download_with_xfercommand(void *ctx, const char *url,
+		const char *localpath, int force)
 {
 	int ret = 0, retval;
 	int usepart = 0;
@@ -277,6 +288,8 @@ static int download_with_xfercommand(const char *url, const char *localpath,
 	char *destfile, *tempfile, *filename;
 	const char **argv;
 	size_t i;
+
+	(void)ctx;
 
 	if(!config->xfercommand_argv) {
 		return -1;
@@ -383,17 +396,46 @@ cleanup:
 }
 
 
-int config_set_arch(const char *arch)
+int config_add_architecture(char *arch)
 {
 	if(strcmp(arch, "auto") == 0) {
 		struct utsname un;
+		char *newarch;
 		uname(&un);
-		config->arch = strdup(un.machine);
-	} else {
-		config->arch = strdup(arch);
+		newarch = strdup(un.machine);
+		free(arch);
+		arch = newarch;
 	}
-	pm_printf(ALPM_LOG_DEBUG, "config: arch: %s\n", config->arch);
+
+	pm_printf(ALPM_LOG_DEBUG, "config: arch: %s\n", arch);
+	config->architectures = alpm_list_add(config->architectures, arch);
 	return 0;
+}
+
+/**
+ * Parse a string into long number. The input string has to be non-empty
+ * and represent a number that fits long type.
+ * @param value the string to parse
+ * @param result pointer to long where the final result will be stored.
+ *   This result is modified if the input string parsed successfully.
+ * @return 0 in case if value parsed successfully, 1 otherwise.
+ */
+static int parse_number(char *value, long *result) {
+	char *endptr;
+	long val;
+	int invalid;
+
+	errno = 0; /* To distinguish success/failure after call */
+	val = strtol(value, &endptr, 10);
+	invalid = (errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+		|| (*endptr != '\0')
+		|| (endptr == value);
+
+	if(!invalid) {
+		*result = val;
+	}
+
+	return invalid;
 }
 
 /**
@@ -565,9 +607,6 @@ static int _parse_options(const char *key, char *value,
 		} else if(strcmp(key, "VerbosePkgLists") == 0) {
 			config->verbosepkglists = 1;
 			pm_printf(ALPM_LOG_DEBUG, "config: verbosepkglists\n");
-		} else if(strcmp(key, "TotalDownload") == 0) {
-			config->totaldownload = 1;
-			pm_printf(ALPM_LOG_DEBUG, "config: totaldownload\n");
 		} else if(strcmp(key, "CheckSpace") == 0) {
 			config->checkspace = 1;
 		} else if(strcmp(key, "Color") == 0) {
@@ -575,6 +614,8 @@ static int _parse_options(const char *key, char *value,
 				config->color = isatty(fileno(stdout)) ? PM_COLOR_ON : PM_COLOR_OFF;
 				enable_colors(config->color);
 			}
+		} else if(strcmp(key, "NoProgressBar") == 0) {
+			config->noprogressbar = 1;
 		} else if(strcmp(key, "DisableDownloadTimeout") == 0) {
 			config->disable_dl_timeout = 1;
 		} else {
@@ -590,6 +631,8 @@ static int _parse_options(const char *key, char *value,
 			setrepeatingoption(value, "NoExtract", &(config->noextract));
 		} else if(strcmp(key, "IgnorePkg") == 0) {
 			setrepeatingoption(value, "IgnorePkg", &(config->ignorepkg));
+		} else if(strcmp(key, "IgnoreGroup") == 0) {
+			setrepeatingoption(value, "IgnoreGroup", &(config->ignoregrp));
 		} else if(strcmp(key, "HoldPkg") == 0) {
 			setrepeatingoption(value, "HoldPkg", &(config->holdpkg));
 		} else if(strcmp(key, "CacheDir") == 0) {
@@ -597,9 +640,12 @@ static int _parse_options(const char *key, char *value,
 		} else if(strcmp(key, "HookDir") == 0) {
 			setrepeatingoption(value, "HookDir", &(config->hookdirs));
 		} else if(strcmp(key, "Architecture") == 0) {
-			if(!config->arch) {
-				config_set_arch(value);
+			alpm_list_t *i, *arches = NULL;
+			setrepeatingoption(value, "Architecture", &arches);
+			for(i = arches; i; i = alpm_list_next(i)) {
+				config_add_architecture(i->data);
 			}
+			alpm_list_free(arches);
 		} else if(strcmp(key, "DBPath") == 0) {
 			/* don't overwrite a path specified on the command line */
 			if(!config->dbpath) {
@@ -671,6 +717,33 @@ static int _parse_options(const char *key, char *value,
 				return 1;
 			}
 			FREELIST(values);
+		} else if(strcmp(key, "ParallelDownloads") == 0) {
+			long number;
+			int err;
+
+			err = parse_number(value, &number);
+			if(err) {
+				pm_printf(ALPM_LOG_ERROR,
+						_("config file %s, line %d: invalid value for '%s' : '%s'\n"),
+						file, linenum, "ParallelDownloads", value);
+				return 1;
+			}
+
+			if(number < 1) {
+				pm_printf(ALPM_LOG_ERROR,
+						_("config file %s, line %d: value for '%s' has to be positive : '%s'\n"),
+						file, linenum, "ParallelDownloads", value);
+				return 1;
+			}
+
+			if(number > INT_MAX) {
+				pm_printf(ALPM_LOG_ERROR,
+						_("config file %s, line %d: value for '%s' is too large : '%s'\n"),
+						file, linenum, "ParallelDownloads", value);
+				return 1;
+			}
+
+			config->parallel_downloads = number;
 		} else {
 			pm_printf(ALPM_LOG_WARNING,
 					_("config file %s, line %d: directive '%s' in section '%s' not recognized.\n"),
@@ -683,17 +756,20 @@ static int _parse_options(const char *key, char *value,
 
 static char *replace_server_vars(config_t *c, config_repo_t *r, const char *s)
 {
-	if(c->arch == NULL && strstr(s, "$arch")) {
+	if(c->architectures == NULL && strstr(s, "$arch")) {
 		pm_printf(ALPM_LOG_ERROR,
 				_("mirror '%s' contains the '%s' variable, but no '%s' is defined.\n"),
 				s, "$arch", "Architecture");
 		return NULL;
 	}
 
-	if(c->arch) {
+	/* use first specified architecture */
+	if(c->architectures) {
 		char *temp, *replaced;
+		alpm_list_t *i = config->architectures;
+		const char *arch = i->data;
 
-		replaced = strreplace(s, "$arch", c->arch);
+		replaced = strreplace(s, "$arch", arch);
 
 		temp = replaced;
 		replaced = strreplace(temp, "$repo", r->name);
@@ -760,8 +836,8 @@ static int setup_libalpm(void)
 	/* initialize library */
 	handle = alpm_initialize(config->rootdir, config->dbpath, &err);
 	if(!handle) {
-		pm_printf(ALPM_LOG_ERROR, _("failed to initialize alpm library\n(%s: %s)\n"),
-		        alpm_strerror(err), config->dbpath);
+		pm_printf(ALPM_LOG_ERROR, _("failed to initialize alpm library:\n(root: %s, dbpath: %s)\n%s\n"),
+		        config->rootdir, config->dbpath, alpm_strerror(err));
 		if(err == ALPM_ERR_DB_VERSION) {
 			fprintf(stderr, _("try running pacman-db-upgrade\n"));
 		}
@@ -769,11 +845,11 @@ static int setup_libalpm(void)
 	}
 	config->handle = handle;
 
-	alpm_option_set_logcb(handle, cb_log);
-	alpm_option_set_dlcb(handle, cb_dl_progress);
-	alpm_option_set_eventcb(handle, cb_event);
-	alpm_option_set_questioncb(handle, cb_question);
-	alpm_option_set_progresscb(handle, cb_progress);
+	alpm_option_set_logcb(handle, cb_log, NULL);
+	alpm_option_set_dlcb(handle, cb_download, NULL);
+	alpm_option_set_eventcb(handle, cb_event, NULL);
+	alpm_option_set_questioncb(handle, cb_question, NULL);
+	alpm_option_set_progresscb(handle, cb_progress, NULL);
 
 	if(config->op == PM_OP_FILES) {
 		alpm_option_set_dbext(handle, ".files");
@@ -820,24 +896,22 @@ static int setup_libalpm(void)
 	}
 
 	if(config->xfercommand) {
-		alpm_option_set_fetchcb(handle, download_with_xfercommand);
+		alpm_option_set_fetchcb(handle, download_with_xfercommand, NULL);
 	} else if(!(alpm_capabilities() & ALPM_CAPABILITY_DOWNLOADER)) {
 		pm_printf(ALPM_LOG_WARNING, _("no '%s' configured\n"), "XferCommand");
 	}
 
-	if(config->totaldownload) {
-		alpm_option_set_totaldlcb(handle, cb_dl_total);
-	}
-
-	alpm_option_set_arch(handle, config->arch);
+	alpm_option_set_architectures(handle, config->architectures);
 	alpm_option_set_checkspace(handle, config->checkspace);
 	alpm_option_set_usesyslog(handle, config->usesyslog);
 
 	alpm_option_set_ignorepkgs(handle, config->ignorepkg);
+	alpm_option_set_ignoregroups(handle, config->ignoregrp);
 	alpm_option_set_noupgrades(handle, config->noupgrade);
 	alpm_option_set_noextracts(handle, config->noextract);
 
 	alpm_option_set_disable_dl_timeout(handle, config->disable_dl_timeout);
+	alpm_option_set_parallel_downloads(handle, config->parallel_downloads);
 
 	for(i = config->assumeinstalled; i; i = i->next) {
 		char *entry = i->data;
@@ -1110,8 +1184,7 @@ int setdefaults(config_t *c)
 
 int parseconfigfile(const char *file)
 {
-	struct section_t section;
-	memset(&section, 0, sizeof(struct section_t));
+	struct section_t section = {0};
 	pm_printf(ALPM_LOG_DEBUG, "config: attempting to read file %s\n", file);
 	return parse_ini(file, _parse_directive, &section);
 }

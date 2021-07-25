@@ -113,9 +113,9 @@ Options
 	general configuration options. Wildcards in the specified paths will get
 	expanded based on linkman:glob[7] rules.
 
-*Architecture =* auto | i686 | x86_64 | ...::
-	If set, pacman will only allow installation of packages of the given
-	architecture (e.g. 'i686', 'x86_64', etc). The special value 'auto' will
+*Architecture =* auto &| i686 &| x86_64 | ...::
+	If set, pacman will only allow installation of packages with the given
+	architectures (e.g. 'i686', 'x86_64', etc). The special value 'auto' will
 	use the system architecture, provided via ``uname -m''. If unset, no
 	architecture checks are made. *NOTE*: Packages with the special
 	architecture 'any' can always be installed, as they are meant to be
@@ -186,12 +186,9 @@ Options
 *Color*::
 	Automatically enable colors only when pacman's output is on a tty.
 
-*TotalDownload*::
-	When downloading, display the amount downloaded, download rate, ETA,
-	and completed percentage of the entire download list rather
-	than the percent of each individual download target. The progress
-	bar is still based solely on the current file download.
-	This option won't work if XferCommand is used.
+*NoProgressBar*::
+	Disables progress bars. This is useful for terminals which do
+	not support escape characters.
 
 *CheckSpace*::
 	Performs an approximate check for adequate available disk space before
@@ -204,6 +201,11 @@ Options
 *DisableDownloadTimeout*::
 	Disable defaults for low speed limit and timeout on downloads. Use this
 	if you have issues downloading files with proxy and/or security gateway.
+
+*ParallelDownloads*::
+	Specifies number of concurrent download streams. The value needs to be a
+	positive integer. If this config option is not set then only one download
+	stream is used (i.e. downloads happen sequentially).
 
 
 Repository Sections
@@ -245,8 +247,8 @@ number.
 During parsing, pacman will define the `$repo` variable to the name of the
 current section. This is often utilized in files specified using the 'Include'
 directive so all repositories can use the same mirrorfile. pacman also defines
-the `$arch` variable to the value of `Architecture`, so the same mirrorfile can
-even be used for different architectures.
+the `$arch` variable to the first (or only) value of the `Architecture` option,
+so the same mirrorfile can even be used for different architectures.
 
 *SigLevel =* ...::
 	Set the signature verification level for this repository. For more

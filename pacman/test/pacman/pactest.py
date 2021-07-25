@@ -3,7 +3,7 @@
 #  pactest : run automated testing on the pacman binary
 #
 #  Copyright (c) 2006 by Aurelien Foret <orelien@chez.com>
-#  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+#  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ def create_parser():
                       dest = "gdb", default = False,
                       help = "use gdb while calling pacman")
     parser.add_option("--valgrind", action = "store_true",
-                      dest = "valgrind", default = False,
+                      dest = "valgrind", default = os.getenv('PACTEST_VALGRIND'),
                       help = "use valgrind while calling pacman")
     parser.add_option("--manual-confirm", action = "store_true",
                       dest = "manualconfirm", default = False,
@@ -125,7 +125,8 @@ if __name__ == "__main__":
 
     # parse options
     opt_parser = create_parser()
-    (opts, args) = opt_parser.parse_args()
+    (opts, args) = opt_parser.parse_args(args=os.getenv('PACTEST_OPTS', '').split())
+    (opts, args) = opt_parser.parse_args(values=opts)
 
     if args is None or len(args) == 0:
         tap.bail("no tests defined, nothing to do")

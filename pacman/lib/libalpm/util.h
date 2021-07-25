@@ -1,7 +1,7 @@
 /*
  *  util.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005 by Christian Hamar <krics@linuxforum.hu>
@@ -53,6 +53,7 @@ void _alpm_alloc_fail(size_t size);
 
 #define MALLOC(p, s, action) do { p = malloc(s); if(p == NULL) { _alpm_alloc_fail(s); action; } } while(0)
 #define CALLOC(p, l, s, action) do { p = calloc(l, s); if(p == NULL) { _alpm_alloc_fail(l * s); action; } } while(0)
+#define REALLOC(p, s, action) do { void* np = realloc(p, s); if(np == NULL) { _alpm_alloc_fail(s); action; } else { p = np; } } while(0)
 /* This strdup macro is NULL safe- copying NULL will yield NULL */
 #define STRDUP(r, s, action) do { if(s != NULL) { r = strdup(s); if(r == NULL) { _alpm_alloc_fail(strlen(s)); action; } } else { r = NULL; } } while(0)
 #define STRNDUP(r, s, l, action) do { if(s != NULL) { r = strndup(s, l); if(r == NULL) { _alpm_alloc_fail(l); action; } } else { r = NULL; } } while(0)
@@ -62,20 +63,23 @@ void _alpm_alloc_fail(size_t size);
 #define ASSERT(cond, action) do { if(!(cond)) { action; } } while(0)
 
 #define RET_ERR_VOID(handle, err) do { \
-	_alpm_log(handle, ALPM_LOG_DEBUG, "returning error %d from %s : %s\n", err, __func__, alpm_strerror(err)); \
+	_alpm_log(handle, ALPM_LOG_DEBUG, "returning error %d from %s (%s: %d) : %s\n", err, __func__, __FILE__, __LINE__, alpm_strerror(err)); \
 	(handle)->pm_errno = (err); \
 	return; } while(0)
 
 #define RET_ERR(handle, err, ret) do { \
-	_alpm_log(handle, ALPM_LOG_DEBUG, "returning error %d from %s : %s\n", err, __func__, alpm_strerror(err)); \
+	_alpm_log(handle, ALPM_LOG_DEBUG, "returning error %d from %s (%s: %d) : %s\n", err, __func__, __FILE__, __LINE__, alpm_strerror(err)); \
 	(handle)->pm_errno = (err); \
 	return (ret); } while(0)
+
+#define GOTO_ERR(handle, err, label) do { \
+	_alpm_log(handle, ALPM_LOG_DEBUG, "got error %d at %s (%s: %d) : %s\n", err, __func__, __FILE__, __LINE__, alpm_strerror(err)); \
+	(handle)->pm_errno = (err); \
+	goto label; } while(0)
 
 #define RET_ERR_ASYNC_SAFE(handle, err, ret) do { \
 	(handle)->pm_errno = (err); \
 	return (ret); } while(0)
-
-#define DOUBLE_EQ(x, y) (fabs((x) - (y)) < DBL_EPSILON)
 
 #define CHECK_HANDLE(handle, action) do { if(!(handle)) { action; } (handle)->pm_errno = ALPM_ERR_OK; } while(0)
 
@@ -130,6 +134,8 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 int _alpm_ldconfig(alpm_handle_t *handle);
 int _alpm_str_cmp(const void *s1, const void *s2);
 char *_alpm_filecache_find(alpm_handle_t *handle, const char *filename);
+/* Checks whether a file exists in cache */
+int _alpm_filecache_exists(alpm_handle_t *handle, const char *filename);
 const char *_alpm_filecache_setup(alpm_handle_t *handle);
 /* Unlike many uses of alpm_pkgvalidation_t, _alpm_test_checksum expects
  * an enum value rather than a bitfield. */
@@ -147,6 +153,7 @@ int _alpm_fnmatch_patterns(alpm_list_t *patterns, const char *string);
 int _alpm_fnmatch(const void *pattern, const void *string);
 void *_alpm_realloc(void **data, size_t *current, const size_t required);
 void *_alpm_greedy_grow(void **data, size_t *current, const size_t required);
+alpm_errno_t _alpm_read_file(const char *filepath, unsigned char **data, size_t *data_len);
 
 #ifndef HAVE_STRSEP
 char *strsep(char **, const char *);
@@ -154,7 +161,6 @@ char *strsep(char **, const char *);
 
 /* check exported library symbols with: nm -C -D <lib> */
 #define SYMEXPORT __attribute__((visibility("default")))
-#define SYMHIDDEN __attribute__((visibility("internal")))
 
 #define UNUSED __attribute__((unused))
 

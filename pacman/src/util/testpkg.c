@@ -1,7 +1,7 @@
 /*
  *  testpkg.c : Test a pacman package for validity
  *
- *  Copyright (c) 2007-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2007-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2007 by Aaron Griffin <aaronmgriffin@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,10 @@
 #include <alpm.h>
 #include "util.h" /* For Localization */
 
-__attribute__((format(printf, 2, 0)))
-static void output_cb(alpm_loglevel_t level, const char *fmt, va_list args)
+__attribute__((format(printf, 3, 0)))
+static void output_cb(void *ctx, alpm_loglevel_t level, const char *fmt, va_list args)
 {
+	(void)ctx;
 	if(fmt[0] == '\0') {
 		return;
 	}
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* let us get log messages from libalpm */
-	alpm_option_set_logcb(handle, output_cb);
+	alpm_option_set_logcb(handle, output_cb, NULL);
 
 	/* set gpgdir to default */
 	alpm_option_set_gpgdir(handle, GPGDIR);

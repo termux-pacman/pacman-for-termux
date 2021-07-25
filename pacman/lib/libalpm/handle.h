@@ -1,7 +1,7 @@
 /*
  *  handle.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,19 +34,19 @@
 #define EVENT(h, e) \
 do { \
 	if((h)->eventcb) { \
-		(h)->eventcb((alpm_event_t *) (e)); \
+		(h)->eventcb((h)->eventcb_ctx, (alpm_event_t *) (e)); \
 	} \
 } while(0)
 #define QUESTION(h, q) \
 do { \
 	if((h)->questioncb) { \
-		(h)->questioncb((alpm_question_t *) (q)); \
+		(h)->questioncb((h)->questioncb_ctx, (alpm_question_t *) (q)); \
 	} \
 } while(0)
 #define PROGRESS(h, e, p, per, n, r) \
 do { \
 	if((h)->progresscb) { \
-		(h)->progresscb(e, p, per, n, r); \
+		(h)->progresscb((h)->progresscb_ctx, e, p, per, n, r); \
 	} \
 } while(0)
 
@@ -59,9 +59,12 @@ struct __alpm_handle_t {
 
 #ifdef HAVE_LIBCURL
 	/* libcurl handle */
-	CURL *curl;             /* reusable curl_easy handle */
-	unsigned short disable_dl_timeout;
+	CURLM *curlm;
+	alpm_list_t *server_errors;
 #endif
+
+	unsigned short disable_dl_timeout;
+	unsigned int parallel_downloads; /* number of download streams */
 
 #ifdef HAVE_LIBGPGME
 	alpm_list_t *known_keys;  /* keys verified to be in our keychain */
@@ -69,12 +72,17 @@ struct __alpm_handle_t {
 
 	/* callback functions */
 	alpm_cb_log logcb;          /* Log callback function */
+	void *logcb_ctx;
 	alpm_cb_download dlcb;      /* Download callback function */
-	alpm_cb_totaldl totaldlcb;  /* Total download callback function */
+	void *dlcb_ctx;
 	alpm_cb_fetch fetchcb;      /* Download file callback function */
+	void *fetchcb_ctx;
 	alpm_cb_event eventcb;
+	void *eventcb_ctx;
 	alpm_cb_question questioncb;
+	void *questioncb_ctx;
 	alpm_cb_progress progresscb;
+	void *progresscb_ctx;
 
 	/* filesystem paths */
 	char *root;              /* Root path, default '/' */
@@ -94,7 +102,7 @@ struct __alpm_handle_t {
 	alpm_list_t *assumeinstalled;   /* List of virtual packages used to satisfy dependencies */
 
 	/* options */
-	char *arch;              /* Architecture of packages we should allow */
+	alpm_list_t *architectures; /* Architectures of packages we should allow */
 	int usesyslog;           /* Use syslog instead of logfile? */ /* TODO move to frontend */
 	int checkspace;          /* Check disk space before installing */
 	char *dbext;             /* Sync DB extension */

@@ -1,7 +1,7 @@
 /*
  *  handle.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *  Copyright (c) 2005 by Aurelien Foret <orelien@chez.com>
  *  Copyright (c) 2005, 2006 by Miklos Vajna <vmiklos@frugalware.org>
@@ -64,11 +64,6 @@ void _alpm_handle_free(alpm_handle_t *handle)
 		closelog();
 	}
 
-#ifdef HAVE_LIBCURL
-	/* release curl handle */
-	curl_easy_cleanup(handle->curl);
-#endif
-
 #ifdef HAVE_LIBGPGME
 	FREELIST(handle->known_keys);
 #endif
@@ -82,7 +77,7 @@ void _alpm_handle_free(alpm_handle_t *handle)
 	FREELIST(handle->hookdirs);
 	FREE(handle->logfile);
 	FREE(handle->lockfile);
-	FREE(handle->arch);
+	FREELIST(handle->architectures);
 	FREE(handle->gpgdir);
 	FREELIST(handle->noupgrade);
 	FREELIST(handle->noextract);
@@ -105,7 +100,7 @@ int _alpm_handle_lock(alpm_handle_t *handle)
 	ASSERT(handle->lockfd < 0, return 0);
 
 	/* create the dir of the lockfile first */
-	dir = strdup(handle->lockfile);
+	STRDUP(dir, handle->lockfile, return -1);
 	ptr = strrchr(dir, '/');
 	if(ptr) {
 		*ptr = '\0';
@@ -123,12 +118,6 @@ int _alpm_handle_lock(alpm_handle_t *handle)
 	return (handle->lockfd >= 0 ? 0 : -1);
 }
 
-/** Remove the database lock file
- * @param handle the context handle
- * @return 0 on success, -1 on error
- *
- * @note Safe to call from inside signal handlers.
- */
 int SYMEXPORT alpm_unlock(alpm_handle_t *handle)
 {
 	ASSERT(handle != NULL, return -1);
@@ -173,10 +162,22 @@ alpm_cb_log SYMEXPORT alpm_option_get_logcb(alpm_handle_t *handle)
 	return handle->logcb;
 }
 
+void SYMEXPORT *alpm_option_get_logcb_ctx(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return NULL);
+	return handle->logcb_ctx;
+}
+
 alpm_cb_download SYMEXPORT alpm_option_get_dlcb(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
 	return handle->dlcb;
+}
+
+void SYMEXPORT *alpm_option_get_dlcb_ctx(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return NULL);
+	return handle->dlcb_ctx;
 }
 
 alpm_cb_fetch SYMEXPORT alpm_option_get_fetchcb(alpm_handle_t *handle)
@@ -185,10 +186,10 @@ alpm_cb_fetch SYMEXPORT alpm_option_get_fetchcb(alpm_handle_t *handle)
 	return handle->fetchcb;
 }
 
-alpm_cb_totaldl SYMEXPORT alpm_option_get_totaldlcb(alpm_handle_t *handle)
+void SYMEXPORT *alpm_option_get_fetchcb_ctx(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
-	return handle->totaldlcb;
+	return handle->fetchcb_ctx;
 }
 
 alpm_cb_event SYMEXPORT alpm_option_get_eventcb(alpm_handle_t *handle)
@@ -197,16 +198,34 @@ alpm_cb_event SYMEXPORT alpm_option_get_eventcb(alpm_handle_t *handle)
 	return handle->eventcb;
 }
 
+void SYMEXPORT *alpm_option_get_eventcb_ctx(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return NULL);
+	return handle->eventcb_ctx;
+}
+
 alpm_cb_question SYMEXPORT alpm_option_get_questioncb(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
 	return handle->questioncb;
 }
 
+void SYMEXPORT *alpm_option_get_questioncb_ctx(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return NULL);
+	return handle->questioncb_ctx;
+}
+
 alpm_cb_progress SYMEXPORT alpm_option_get_progresscb(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
 	return handle->progresscb;
+}
+
+void SYMEXPORT *alpm_option_get_progresscb_ctx(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return NULL);
+	return handle->progresscb_ctx;
 }
 
 const char SYMEXPORT *alpm_option_get_root(alpm_handle_t *handle)
@@ -293,10 +312,10 @@ alpm_list_t SYMEXPORT *alpm_option_get_assumeinstalled(alpm_handle_t *handle)
 	return handle->assumeinstalled;
 }
 
-const char SYMEXPORT *alpm_option_get_arch(alpm_handle_t *handle)
+alpm_list_t SYMEXPORT *alpm_option_get_architectures(alpm_handle_t *handle)
 {
 	CHECK_HANDLE(handle, return NULL);
-	return handle->arch;
+	return handle->architectures;
 }
 
 int SYMEXPORT alpm_option_get_checkspace(alpm_handle_t *handle)
@@ -311,52 +330,57 @@ const char SYMEXPORT *alpm_option_get_dbext(alpm_handle_t *handle)
 	return handle->dbext;
 }
 
-int SYMEXPORT alpm_option_set_logcb(alpm_handle_t *handle, alpm_cb_log cb)
+int SYMEXPORT alpm_option_get_parallel_downloads(alpm_handle_t *handle)
+{
+	CHECK_HANDLE(handle, return -1);
+	return handle->parallel_downloads;
+}
+
+int SYMEXPORT alpm_option_set_logcb(alpm_handle_t *handle, alpm_cb_log cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->logcb = cb;
+	handle->logcb_ctx = ctx;
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_dlcb(alpm_handle_t *handle, alpm_cb_download cb)
+int SYMEXPORT alpm_option_set_dlcb(alpm_handle_t *handle, alpm_cb_download cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->dlcb = cb;
+	handle->dlcb_ctx = ctx;
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_fetchcb(alpm_handle_t *handle, alpm_cb_fetch cb)
+int SYMEXPORT alpm_option_set_fetchcb(alpm_handle_t *handle, alpm_cb_fetch cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->fetchcb = cb;
+	handle->fetchcb_ctx = ctx;
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_totaldlcb(alpm_handle_t *handle, alpm_cb_totaldl cb)
-{
-	CHECK_HANDLE(handle, return -1);
-	handle->totaldlcb = cb;
-	return 0;
-}
-
-int SYMEXPORT alpm_option_set_eventcb(alpm_handle_t *handle, alpm_cb_event cb)
+int SYMEXPORT alpm_option_set_eventcb(alpm_handle_t *handle, alpm_cb_event cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->eventcb = cb;
+	handle->eventcb_ctx = ctx;
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_questioncb(alpm_handle_t *handle, alpm_cb_question cb)
+int SYMEXPORT alpm_option_set_questioncb(alpm_handle_t *handle, alpm_cb_question cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->questioncb = cb;
+	handle->questioncb_ctx = ctx;
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_progresscb(alpm_handle_t *handle, alpm_cb_progress cb)
+int SYMEXPORT alpm_option_set_progresscb(alpm_handle_t *handle, alpm_cb_progress cb, void *ctx)
 {
 	CHECK_HANDLE(handle, return -1);
 	handle->progresscb = cb;
+	handle->progresscb_ctx = ctx;
 	return 0;
 }
 
@@ -738,11 +762,29 @@ int SYMEXPORT alpm_option_remove_assumeinstalled(alpm_handle_t *handle, const al
 	return 0;
 }
 
-int SYMEXPORT alpm_option_set_arch(alpm_handle_t *handle, const char *arch)
+int SYMEXPORT alpm_option_add_architecture(alpm_handle_t *handle, const char *arch)
+{
+	handle->architectures = alpm_list_add(handle->architectures, strdup(arch));
+	return 0;
+}
+
+int SYMEXPORT alpm_option_set_architectures(alpm_handle_t *handle, alpm_list_t *arches)
 {
 	CHECK_HANDLE(handle, return -1);
-	if(handle->arch) FREE(handle->arch);
-	STRDUP(handle->arch, arch, RET_ERR(handle, ALPM_ERR_MEMORY, -1));
+	if(handle->architectures) FREELIST(handle->architectures);
+	handle->architectures = alpm_list_strdup(arches);
+	return 0;
+}
+
+int SYMEXPORT alpm_option_remove_architecture(alpm_handle_t *handle, const char *arch)
+{
+	char *vdata = NULL;
+	CHECK_HANDLE(handle, return -1);
+	handle->architectures = alpm_list_remove_str(handle->architectures, arch, &vdata);
+	if(vdata != NULL) {
+		FREE(vdata);
+		return 1;
+	}
 	return 0;
 }
 
@@ -855,10 +897,15 @@ int SYMEXPORT alpm_option_set_disable_dl_timeout(alpm_handle_t *handle,
 		unsigned short disable_dl_timeout)
 {
 	CHECK_HANDLE(handle, return -1);
-#ifdef HAVE_LIBCURL
 	handle->disable_dl_timeout = disable_dl_timeout;
-#else
-	(void)disable_dl_timeout; /* silence unused variable warnings */
-#endif
+	return 0;
+}
+
+int SYMEXPORT alpm_option_set_parallel_downloads(alpm_handle_t *handle,
+		unsigned int num_streams)
+{
+	CHECK_HANDLE(handle, return -1);
+	ASSERT(num_streams >= 1, RET_ERR(handle, ALPM_ERR_WRONG_ARGS, -1));
+	handle->parallel_downloads = num_streams;
 	return 0;
 }

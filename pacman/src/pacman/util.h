@@ -1,7 +1,7 @@
 /*
  *  util.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,9 @@
 
 #include "util-common.h"
 
+#define CURSOR_HIDE_ANSICODE "\x1B[?25l"
+#define CURSOR_SHOW_ANSICODE "\x1B[?25h"
+
 #ifdef ENABLE_NLS
 #include <libintl.h> /* here so it doesn't need to be included elsewhere */
 /* define _() as shortcut for gettext() */
@@ -48,7 +51,7 @@ void trans_init_error(void);
 /* flags is a bitfield of alpm_transflag_t flags */
 int trans_init(int flags, int check_valid);
 int trans_release(void);
-//int needs_root(void);
+int needs_root(void);
 int check_syncdbs(size_t need_repos, int check_valid);
 int sync_syncdbs(int level, alpm_list_t *syncs);
 unsigned short getcols(void);
@@ -77,6 +80,14 @@ int colon_printf(const char *format, ...) __attribute__((format(printf, 1, 2)));
 int yesno(const char *format, ...) __attribute__((format(printf, 1, 2)));
 int noyes(const char *format, ...) __attribute__((format(printf, 1, 2)));
 char *arg_to_string(int argc, char *argv[]);
+char *safe_fgets_stdin(char *s, int size);
+void console_cursor_hide(void);
+void console_cursor_show(void);
+void console_cursor_move_up(unsigned int lines);
+void console_cursor_move_down(unsigned int lines);
+void console_cursor_move_end(void);
+/* Erases line from the current cursor position till the end of the line */
+void console_erase_line(void);
 
 int pm_printf(alpm_loglevel_t level, const char *format, ...) __attribute__((format(printf,2,3)));
 int pm_asprintf(char **string, const char *format, ...) __attribute__((format(printf,2,3)));

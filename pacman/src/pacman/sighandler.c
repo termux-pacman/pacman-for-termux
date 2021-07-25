@@ -1,7 +1,7 @@
 /*
  *  sighandler.c
  *
- *  Copyright (c) 2015-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2015-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,6 +53,8 @@ static void _reset_handler(int signum)
  */
 static void soft_interrupt_handler(int signum)
 {
+	console_cursor_move_end();
+
 	if(signum == SIGINT) {
 		const char msg[] = "\nInterrupt signal received\n";
 		xwrite(STDERR_FILENO, msg, ARRAYSIZE(msg) - 1);
@@ -60,6 +62,8 @@ static void soft_interrupt_handler(int signum)
 		const char msg[] = "\nHangup signal received\n";
 		xwrite(STDERR_FILENO, msg, ARRAYSIZE(msg) - 1);
 	}
+	xwrite(STDOUT_FILENO, CURSOR_SHOW_ANSICODE,
+		sizeof(CURSOR_SHOW_ANSICODE) - 1);
 	if(alpm_trans_interrupt(config->handle) == 0) {
 		/* a transaction is being interrupted, don't exit pacman yet. */
 		return;
@@ -94,11 +98,15 @@ static void segv_handler(int signum)
 	sigset_t segvset;
 	const char msg[] = "\nerror: segmentation fault\n"
 		"Please submit a full bug report with --debug if appropriate.\n";
+	console_cursor_move_end();
 	xwrite(STDERR_FILENO, msg, sizeof(msg) - 1);
+	xwrite(STDOUT_FILENO, CURSOR_SHOW_ANSICODE,
+		sizeof(CURSOR_SHOW_ANSICODE) - 1);
 
 	/* restore the default handler */
 	_reset_handler(signum);
 	/* unblock SIGSEGV */
+	sigemptyset(&segvset);
 	sigaddset(&segvset, signum);
 	sigprocmask(SIG_UNBLOCK, &segvset, NULL);
 	/* re-raise to trigger a core dump */

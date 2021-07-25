@@ -1,5 +1,5 @@
 #  Copyright (c) 2006 by Aurelien Foret <orelien@chez.com>
-#  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+#  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -98,7 +98,12 @@ class pmpkg(object):
             filename, extra = filename.split("|")
         return filename
 
-    def makepkg(self, path):
+    def makepkg_bytes(self):
+        buf = BytesIO();
+        self.makepkg(fileobj=buf)
+        return buf.getvalue()
+
+    def makepkg(self, path=None, fileobj=None):
         """Creates an Arch Linux package archive.
 
         A package archive is generated in the location 'path', based on the data
@@ -138,11 +143,12 @@ class pmpkg(object):
         if any(self.install.values()):
             archive_files.append((".INSTALL", self.installfile()))
 
-        self.path = os.path.join(path, self.filename())
-        util.mkdir(os.path.dirname(self.path))
+        if path:
+            self.path = os.path.join(path, self.filename())
+            util.mkdir(os.path.dirname(self.path))
 
         # Generate package metadata
-        tar = tarfile.open(self.path, "w:gz", format=tarfile.GNU_FORMAT)
+        tar = tarfile.open(name=self.path, fileobj=fileobj, mode="w:gz", format=tarfile.GNU_FORMAT)
         for name, data in archive_files:
             info = tarfile.TarInfo(name)
             info.size = len(data)

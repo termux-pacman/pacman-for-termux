@@ -1,7 +1,7 @@
 /*
  *  error.c
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -90,6 +90,8 @@ const char SYMEXPORT *alpm_strerror(alpm_errno_t err)
 			return _("transaction not initialized");
 		case ALPM_ERR_TRANS_DUP_TARGET:
 			return _("duplicate target");
+		case ALPM_ERR_TRANS_DUP_FILENAME:
+			return _("duplicate filename");
 		case ALPM_ERR_TRANS_NOT_INITIALIZED:
 			return _("transaction not initialized");
 		case ALPM_ERR_TRANS_NOT_PREPARED:
@@ -123,8 +125,6 @@ const char SYMEXPORT *alpm_strerror(alpm_errno_t err)
 			return _("package filename is not valid");
 		case ALPM_ERR_PKG_INVALID_ARCH:
 			return _("package architecture is not valid");
-		case ALPM_ERR_PKG_REPO_NOT_FOUND:
-			return _("could not find repository for target");
 		/* Signatures */
 		case ALPM_ERR_SIG_MISSING:
 			return _("missing PGP signature");

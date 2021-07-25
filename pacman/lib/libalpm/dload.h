@@ -1,7 +1,7 @@
 /*
  *  dload.h
  *
- *  Copyright (c) 2006-2020 Pacman Development Team <pacman-dev@archlinux.org>
+ *  Copyright (c) 2006-2021 Pacman Development Team <pacman-dev@archlinux.org>
  *  Copyright (c) 2002-2006 by Judd Vinet <jvinet@zeroflux.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,13 @@ struct dload_payload {
 	char *tempfile_name;
 	char *destfile_name;
 	char *content_disp_name;
+	/* client has to provide either
+	 *  1) fileurl - full URL to the file
+	 *  2) pair of (servers, filepath), in this case ALPM iterates over the
+	 *     server list and tries to download "$server/$filepath"
+	 */
 	char *fileurl;
+	char *filepath; /* download URL path */
 	alpm_list_t *servers;
 	long respcode;
 	off_t initial_size;
@@ -41,16 +47,20 @@ struct dload_payload {
 	int errors_ok;
 	int unlink_on_fail;
 	int trust_remote_name;
-	int cb_initialized;
+	int download_signature; /* specifies if an accompanion *.sig file need to be downloaded*/
+	int signature_optional; /* *.sig file is optional */
 #ifdef HAVE_LIBCURL
-	CURLcode curlerr;       /* last error produced by curl */
+	CURL *curl;
+	char error_buffer[CURL_ERROR_SIZE];
+	FILE *localf; /* temp download file */
+	int signature; /* specifies if this payload is for a signature file */
 #endif
 };
 
 void _alpm_dload_payload_reset(struct dload_payload *payload);
-void _alpm_dload_payload_reset_for_retry(struct dload_payload *payload);
 
-int _alpm_download(struct dload_payload *payload, const char *localpath,
-		char **final_file, const char **final_url);
+int _alpm_download(alpm_handle_t *handle,
+		alpm_list_t *payloads /* struct dload_payload */,
+		const char *localpath);
 
 #endif /* ALPM_DLOAD_H */

@@ -22,7 +22,8 @@ HoldPkg     = pacman glibc
 Architecture = auto
 
 # Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
-#is_itIgnorePkg = pacman
+#is_itIgnorePkg   = pacman
+#IgnoreGroup =
 
 #NoUpgrade   =
 #NoExtract   =
@@ -30,9 +31,10 @@ Architecture = auto
 # Misc options
 #UseSyslog
 Color
-#TotalDownload
+#NoProgressBar
 CheckSpace
 #VerbosePkgLists
+ParallelDownloads = 5
 
 # By default, pacman accepts packages signed by keys that its local keyring
 # trusts (see pacman-key and its man page), as well as unsigned packages.

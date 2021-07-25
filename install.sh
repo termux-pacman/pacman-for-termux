@@ -38,7 +38,7 @@ install_pacman(){
     meson build
   fi
   if [[ -z $1 || "$1" == "com" ]]; then
-    commet 'Compiling and installing pacman.'
+    commet 'Compiling pacman.'
     set +e
     #while :
     #do
@@ -58,8 +58,8 @@ install_pacman(){
     set -e
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
-    commet ''
-    ninja -C install
+    commet 'Installing pacman.'
+    ninja -C build install
   fi
   cd ..
 }

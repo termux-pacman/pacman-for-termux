@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   pacman-key - manages pacman's keyring
 #                Based on apt-key, from Debian
@@ -667,11 +667,6 @@ fi
 
 if ! type -p gpg >/dev/null; then
 	error "$(gettext "Cannot find the %s binary required for all %s operations.")" "gpg" "pacman-key"
-	exit 1
-fi
-
-if (( (ADD || DELETE || EDITKEY || IMPORT || IMPORT_TRUSTDB || INIT || LSIGNKEY || POPULATE || RECEIVE || REFRESH || UPDATEDB) && EUID != 0 )); then
-	error "$(gettext "%s needs to be run as root for this operation.")" "pacman-key"
 	exit 1
 fi
 

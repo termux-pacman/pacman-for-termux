@@ -32,16 +32,16 @@ install_pacman(){
     exit 2
   fi
   cd pacman
-  if [[ -z $1 || "$1" == "conf" ]]; then
-    commet 'Run the configure script.'
-    ./configure --prefix=$PREFIX
+  if [[ -z $1 || "$1" == "mes" ]]; then
+    commet 'Running meson build.'
+    meson build
   fi
-  if [[ -z $1 || "$1" == "make" ]]; then
-    commet 'Run make.'
+  if [[ -z $1 || "$1" == "com" ]]; then
+    commet 'Compiling and installing pacman.'
     set +e
     while :
     do
-      make
+      ninja -C build
       if (( "$?" == "0" )); then
         break
       else
@@ -57,8 +57,8 @@ install_pacman(){
     set -e
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
-    commet 'Run make install.'
-    make install
+    commet ''
+    ninja -C install
   fi
   cd ..
 }
@@ -106,7 +106,7 @@ settings_pacman(){
   apt-get purge clang python ninja bash-completion bsdtar -y
   apt autoremove -y
   pkg install libarchive -y
-  
+
   info 'Reload termux.'
   sleep 3
   kill -9 $PPID
@@ -130,21 +130,22 @@ if [[ "$1" == "help" ]]; then
   info 'Help'
   commet './install.sh [com1] [com2]'
   commet 'Installer script for pacman on termux.'
-  commet 'The latest available version of pacman is 5.2.2 .'
+  commet 'The latest available version of pacman is 6.0.0 .'
   commet 'Commands with [auto] highlighted will be executed automatically if nothing is specified.'
   commet 'When running a specific command, only that command will be executed.'
   commet 'Commands:'
   commet '  upd[auto] - installing and updating packages.'
   commet '  ins[auto] - installing pacman.'
-  commet '    conf[auto] - run the configure script.'
-  commet '    make[auto] - run make.'
-  commet '    ins[auto] - run make install'
+  commet '    mes[auto] - Running meson build.'
+  commet '    com[auto] - Compiling pacman.'
+  commet '    ins[auto] - Installing pacman.'
   commet '  set[auto] - setting up pacman.'
   commet '  set2 - second part of pacman setup (only run after termux reboot).'
   commet '  test - сompiling pacman for a test.'
 elif [[ "$1" == "test" ]]; then
-  install_pacman "conf"
-  install_pacman "make"
+  info 'Compiling pacman for a test (testing it).'
+  install_pacman mes
+  install_pacman com
 elif [[ "$1" == "set2" ]]; then
   settings2_pacman $2
 else

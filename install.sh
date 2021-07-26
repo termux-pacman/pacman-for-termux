@@ -39,6 +39,7 @@ install_pacman(){
   fi
   if [[ -z $1 || "$1" == "com" ]]; then
     commet 'Compiling pacman.'
+    sed -i 's/cc $ARGS -o $out $in $LINK_ARGS/cc $ARGS -o $out $in $LINK_ARGS -landroid-glob/' build/build.ninja
     ninja -C build
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then

@@ -39,23 +39,7 @@ install_pacman(){
   fi
   if [[ -z $1 || "$1" == "com" ]]; then
     commet 'Compiling pacman.'
-    set +e
-    #while :
-    #do
-      ninja -C build
-      #if (( "$?" == "0" )); then
-        #break
-      #else
-        #commet 'Error correction.'
-        #if [[ -z "`grep '$(AM_V_CCLD)$(LINK) $(pacman_OBJECTS) $(pacman_LDADD) $(LIBS) -landroid-glob' src/pacman/Makefile`" ]]; then
-          #sed -i 's/$(AM_V_CCLD)$(LINK) $(pacman_OBJECTS) $(pacman_LDADD) $(LIBS)/$(AM_V_CCLD)$(LINK) $(pacman_OBJECTS) $(pacman_LDADD) $(LIBS) -landroid-glob/' src/pacman/Makefile
-        #fi
-        #if [[ -z "`grep '$(AM_V_CCLD)$(LINK) $(pacman_conf_OBJECTS) $(pacman_conf_LDADD) $(LIBS) -landroid-glob' src/pacman/Makefile`" ]]; then
-          #sed -i 's/$(AM_V_CCLD)$(LINK) $(pacman_conf_OBJECTS) $(pacman_conf_LDADD) $(LIBS)/$(AM_V_CCLD)$(LINK) $(pacman_conf_OBJECTS) $(pacman_conf_LDADD) $(LIBS) -landroid-glob/' src/pacman/Makefile
-        #fi
-      #fi
-    #done
-    set -e
+    ninja -C build
   fi
   if [[ -z $1 || "$1" == "ins" ]]; then
     commet 'Installing pacman.'

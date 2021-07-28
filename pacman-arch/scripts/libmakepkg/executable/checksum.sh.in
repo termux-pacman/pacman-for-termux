@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   checksum.sh - Confirm presence of binaries for checksum operations
 #

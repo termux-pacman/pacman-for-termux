@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   build_references.sh - Warn about files containing references to build directories
 #

@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   lint_config.sh - functions for checking for makepkg.conf errors
 #
@@ -21,7 +21,7 @@
 [[ -n "$LIBMAKEPKG_LINT_CONFIG_SH" ]] && return
 LIBMAKEPKG_LINT_CONFIG_SH=1
 
-LIBRARY=${LIBRARY:-'/usr/share/makepkg'}
+LIBRARY=${LIBRARY:-'/data/data/com.termux/files/usr/share/makepkg'}
 
 source "$LIBRARY/util/message.sh"
 source "$LIBRARY/util/util.sh"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   compress.sh - functions to compress archives in a uniform manner
 #

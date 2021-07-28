@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   variable.sh - Check that variables are or are not arrays as appropriate
 #

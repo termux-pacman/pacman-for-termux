@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   source_date_epoch.sh - Check that reproducible builds timestamp is valid
 #

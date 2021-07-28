@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   arch_specific.sh - Check that arch specific variables can be arch specific.
 #

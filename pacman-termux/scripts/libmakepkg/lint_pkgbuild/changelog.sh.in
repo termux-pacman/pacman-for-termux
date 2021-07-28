@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   changelog.sh - Check the files in the 'changelog' array exist.
 #

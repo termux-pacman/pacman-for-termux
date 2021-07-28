@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   conflicts.sh - Check the 'conflicts' array conforms to requirements.
 #

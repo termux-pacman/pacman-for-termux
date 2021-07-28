@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   strip.sh - Confirm presence of strip binary
 #

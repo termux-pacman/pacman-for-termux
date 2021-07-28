@@ -237,10 +237,6 @@ run_pacman() {
 			else
 				cmd=("${PACMAN_AUTH[@]}" "${cmd[@]}")
 			fi
-		elif type -p sudo >/dev/null; then
-			cmd=(sudo "${cmd[@]}")
-		else
-			cmd=(su root -c "$cmdescape")
 		fi
 		local lockfile="$(pacman-conf DBPath)/db.lck"
 		while [[ -f $lockfile ]]; do

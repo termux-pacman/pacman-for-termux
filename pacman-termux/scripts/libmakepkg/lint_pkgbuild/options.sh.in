@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   options.sh - Check the 'options' array conforms to requirements.
 #

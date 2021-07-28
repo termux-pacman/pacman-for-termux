@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   epoch.sh - Check the 'epoch' variable conforms to requirements.
 #

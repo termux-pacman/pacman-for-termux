@@ -1131,7 +1131,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* check if we have sufficient permission for the requested operation */
-	if(myuid == 0 && system("[[ ! $FAKEROOTKEY ]]") == 0) {
+	if(myuid == 0) {
 		pm_printf(ALPM_LOG_ERROR, _("blocking operation, you can not run from the root of the user.\n"));
 		cleanup(EXIT_FAILURE);
 	}

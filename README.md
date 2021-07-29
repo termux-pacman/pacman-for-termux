@@ -1,12 +1,20 @@
 # pacman-for-termux
+Configured pacman to install packages on termux. There are two kinds of pacman, **arch** and **termux**.  The main difference between the two is the support for installing packages (**pacman-arch** installs arch packages and **pacman-termux** installs termux packages).
 
 ## Note:
 At this point, pacman is not fully configured for termux, so there may be bugs.  
 
 ## A warning:
-Do not use `--overwrite` when installing packages as there is a chance of breaking the termux system ([more details](https://github.com/termux/termux-packages/issues/6842#issuecomment-845887799)).  
+#### pacman-arch
+Do not install or update the original conflicting packages ([list](https://github.com/Maxython/pacman-for-termux/wiki/Package-List)), as there is a chance to break the system. These customized packages are located [here](https://github.com/Maxython/arch-packages-for-termux) and are updated as well.
 
 To install packages without dependencies, use the following command: `pacman -Sdd name_package`
+#### pacman-termux
+There are currently no compiled termux packages in pacman format, but you can make full use of `makepkg`.
+```bash
+makepkg -d
+pacman -Udd *package_name*
+```
 
 ## Commands for installing pacman.
 ```bash
@@ -20,5 +28,3 @@ After these commands, restart termux and run the following command.
 ```bash
 ./pacman-for-termux/install.sh set2
 ```
-
-## The configured arch packages are located [here](https://github.com/Maxython/arch-packages-for-termux).

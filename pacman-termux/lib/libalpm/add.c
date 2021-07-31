@@ -245,7 +245,6 @@ static int extract_single_file(alpm_handle_t *handle, struct archive *archive,
 	 *  3,4- conflict checks should have caught this. either overwrite
 	 *      or backup the file.
 	 *  5- file replacing directory- don't allow it.
-	 *  6- skip extraction, dir already exists.
 	 */
 
 	isnewfile = llstat(filename, &lsbuf) != 0;
@@ -256,22 +255,6 @@ static int extract_single_file(alpm_handle_t *handle, struct archive *archive,
 		uid_t entryuid = archive_entry_uid(entry);
 		gid_t entrygid = archive_entry_gid(entry);
 #endif
-
-		/* case 6: existing dir, ignore it */
-		if(lsbuf.st_mode != entrymode) {
-			/* if filesystem perms are different than pkg perms, warn user */
-			mode_t mask = 07777;
-			_alpm_log(handle, ALPM_LOG_WARNING, _("directory permissions differ on %s\n"
-					"filesystem: %o  package: %o\n"), filename, lsbuf.st_mode & mask,
-					entrymode & mask);
-			alpm_logaction(handle, ALPM_CALLER_PREFIX,
-					"warning: directory permissions differ on %s\n"
-					"filesystem: %o  package: %o\n", filename, lsbuf.st_mode & mask,
-					entrymode & mask);
-			char *com = (char*)malloc(13 * sizeof(char));
-                        sprintf(com, "chmod %o %s", entrymode & mask, filename);
-                        system(com);
-		}
 
 #if 0
 		/* Disable this warning until our user management in packages has improved.

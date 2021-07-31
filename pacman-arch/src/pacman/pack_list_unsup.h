@@ -16,6 +16,8 @@ char * p11;
 char * p12;
 char * p13;
 char * p14;
+char * p15;
+char * p16;
 };
 
 struct str_pac list_pack = {

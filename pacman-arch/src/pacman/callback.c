@@ -466,8 +466,6 @@ void cb_question(void *ctx, alpm_question_t *question)
 						sprintf(type, "%d", ((char**)&list_pack)[i]);
 						if (strcmp(type, "0") != 0) {
             						if (((char**)&list_pack)[i] == alpm_pkg_get_name(q->pkg)){
-								printf(_("The %s package is not supported. More details here https://github.com/Maxython/pacman-for-termux/wiki/Package-List.\n"),
-										alpm_pkg_get_name(q->pkg));
 								q->install = 0;
 								itog = 0;
 								break;

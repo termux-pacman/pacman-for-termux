@@ -2,22 +2,22 @@
 
 struct str_pac
 {
-char * p1;
-char * p2;
-char * p3;
-char * p4;
-char * p5;
-char * p6;
-char * p7;
-char * p8;
-char * p9;
-char * p10;
-char * p11;
-char * p12;
-char * p13;
-char * p14;
-char * p15;
-char * p16;
+const char * p1;
+const char * p2;
+const char * p3;
+const char * p4;
+const char * p5;
+const char * p6;
+const char * p7;
+const char * p8;
+const char * p9;
+const char * p10;
+const char * p11;
+const char * p12;
+const char * p13;
+const char * p14;
+const char * p15;
+const char * p16;
 };
 
 struct str_pac list_pack = {
@@ -29,7 +29,7 @@ struct str_pac list_pack = {
 "gpgme",
 "libarchive",
 "libgpg-error",
-"libnghttp2",
+"libnghttp",
 "libssh2",
 "libxml2",
 "ncurses",

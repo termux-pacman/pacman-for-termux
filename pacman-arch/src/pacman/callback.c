@@ -460,12 +460,10 @@ void cb_question(void *ctx, alpm_question_t *question)
 			{
 				alpm_question_install_ignorepkg_t *q = &question->install_ignorepkg;
                         	if(!config->op_s_downloadonly) {
-					char * type = (char*)malloc(13 * sizeof(char));
 					int itog = 1;
 					for (int i = 0; 1; i++) {
-						sprintf(type, "%d", ((char**)&list_pack)[i]);
-						if (strcmp(type, "0") != 0) {
-            						if (((char**)&list_pack)[i] == alpm_pkg_get_name(q->pkg)){
+						if (i < 16) {
+            						if (strcmp(alpm_pkg_get_name(q->pkg), ((char**)&list_pack)[i]) == 0){
 								q->install = 0;
 								itog = 0;
 								break;

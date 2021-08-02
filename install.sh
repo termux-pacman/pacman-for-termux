@@ -1,5 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
-#Script for installing pacman.
+# -----------------------------
+# Script for installing pacman.
+# by: Maxython
+# https://github.com/Maxython/pacman-for-termux
+# -----------------------------
 
 info(){
 echo -e "\033[1;36m\n# $1\033[0m"
@@ -13,8 +17,6 @@ error(){
 echo -e "\033[1;31m# $1\033[0m"
 }
 
-set -e
-
 install_packages(){
   info 'System and package updates.'
   pkg update -y
@@ -26,34 +28,48 @@ install_packages(){
 }
 
 install_pacman(){
-  info 'Installing pacman.'
   dir=pacman-${type}
   if [[ ! -d $dir ]]; then
     error 'Not found: pacman.'
     exit 2
   fi
   cd $dir
-  if [[ -z $1 || "$1" == "mes" ]]; then
-    commet 'Running meson build.'
-    meson build
-  fi
-  if [[ -z $1 || "$1" == "com" ]]; then
-    commet 'Compiling pacman.'
-    sed -i 's/cc $ARGS -o $out $in $LINK_ARGS/cc $ARGS -o $out $in $LINK_ARGS -landroid-glob/' build/build.ninja
-    ninja -C build
-  fi
-  if [[ -z $1 || "$1" == "ins" ]]; then
-    commet 'Installing pacman.'
-    ninja -C build install
-  fi
+  case $1 in
+    "")
+      info 'Installing pacman.'
+      meson build
+      sed -i 's/cc $ARGS -o $out $in $LINK_ARGS/cc $ARGS -o $out $in $LINK_ARGS -landroid-glob/' build/build.ninja
+      ninja -C build install
+    ;;
+
+    "mes")
+      info 'Running meson build.'
+      meson build
+    ;;
+
+    "com")
+      info 'Compiling pacman.'
+      sed -i 's/cc $ARGS -o $out $in $LINK_ARGS/cc $ARGS -o $out $in $LINK_ARGS -landroid-glob/' build/build.ninja
+      ninja -C build
+    ;;
+
+    "ins")
+      info 'Installing pacman.'
+      ninja -C build install
+    ;;
+
+    *)
+      error "The command '$1' was not found.  For more information, enter './install.sh help'."
+      exit 1
+    ;;
+  esac
+
   cd ..
 }
 
 settings_pacman(){
   if [[ "$type" == "arch" ]]; then
     info 'Pacman settings.'
-    chmod 755 /data/data/com.termux/files/*
-    chmod 755 $PREFIX/*
     wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
     pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
     rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
@@ -93,7 +109,7 @@ settings_pacman(){
   pkg install libarchive -y
 
   info 'Reload termux.'
-  sleep 3
+  sleep 2
   kill -9 $PPID
 }
 
@@ -113,62 +129,93 @@ settings2_pacman(){
   fi
 }
 
-if [[ ! -f selec.conf ]]; then
+set -e
+
+clear
+
+selec=$HOME/pacman-for-termux/selec.conf
+if [[ ! -f $selec ]]; then
   info "Select the pacman view, they are configured for a specific environment and for a specific type of command installation.  The script will also set up the environment for a particular kind of pacman."
   PS3='Please enter your choice: '
   options=("Arch" "Termux" "Quit")
   select opt in "${options[@]}"
   do
     case $opt in
-        "Arch")
-          echo "type=arch" > selec.conf
-          break
-          ;;
-        "Termux")
-          echo "type=termux" > selec.conf
-          break
-          ;;
-        "Quit")
-          exit 0
-          ;;
-        *) echo "invalid option $REPLY";;
+      "Arch")
+        echo "type=arch" > $selec
+        break
+        ;;
+
+      "Termux")
+        echo "type=termux" > $selec
+        break
+        ;;
+
+      "Quit")
+        error "$selec file not found"
+        exit 2
+        ;;
+      *) error "invalid option $REPLY";;
     esac
   done
 fi
-source selec.conf
+source $selec
 
-if [[ "$1" == "help" ]]; then
-  info 'Help'
-  commet './install.sh [com1] [com2]'
-  commet 'Installer script for pacman on termux.'
-  commet 'The latest available version of pacman is 6.0.0 .'
-  commet 'Commands with [auto] highlighted will be executed automatically if nothing is specified.'
-  commet 'When running a specific command, only that command will be executed.'
-  commet 'Commands:'
-  commet '  upd[auto] - installing and updating packages.'
-  commet '  ins[auto] - installing pacman.'
-  commet '    mes[auto] - Running meson build.'
-  commet '    com[auto] - Compiling pacman.'
-  commet '    ins[auto] - Installing pacman.'
-  commet '  set[auto] - setting up pacman.'
-  commet '  set2 - second part of pacman setup (only run after termux reboot).'
-  commet '  test - сompiling pacman for a test.'
-elif [[ "$1" == "test" ]]; then
-  info 'Compiling pacman for a test (testing it).'
-  install_pacman mes
-  install_pacman com
-elif [[ "$1" == "set2" ]]; then
-  settings2_pacman $2
-else
-  if [[ -z $1 || "$1" == "upd" ]]; then
+
+case $1 in
+  "")
     install_packages
-  fi
-  if [[ -z $1 || "$1" == "ins" ]]; then
     install_pacman $2
-  fi
-  if [[ -z $1 || "$1" == "set" ]]; then
     settings_pacman
-  fi
-fi
+    ;;
+
+  "help")
+    info 'Help'
+    commet './install.sh [com1] [com2]'
+    commet 'Installer script for pacman on termux.'
+    commet 'The latest available version of pacman is 6.0.0 .'
+    commet 'Commands with [auto] highlighted will be executed automatically if nothing is specified.'
+    commet 'When running a specific command, only that command will be executed.'
+    commet 'If an error occurs during installation or pacman does not work correctly, write there:'
+    commet 'https://github.com/Maxython/pacman-for-termux/issues'
+    commet 'Commands:'
+    commet '  upd[auto] - installing and updating packages.'
+    commet '  ins[auto] - installing pacman.'
+    commet '    mes[auto] - Running meson build.'
+    commet '    com[auto] - Compiling pacman.'
+    commet '    ins[auto] - Installing pacman.'
+    commet '  set[auto] - setting up pacman.'
+    commet '  set2 - second part of pacman setup (only run after termux reboot).'
+    commet '  test - сompiling pacman for a test.'
+    ;;
+
+  "upd")
+    install_packages
+    ;;
+
+  "ins")
+    install_pacman $2
+    ;;
+
+  "set")
+    settings_pacman
+    ;;
+
+  "set2")
+    settings2_pacman
+    ;;
+
+  "test")
+    info 'Compiling pacman for a test (testing it).'
+    install_pacman mes
+    install_pacman com
+    ;;
+
+  *)
+    error "The command '$1' was not found.  For more information, enter './install.sh help'."
+    exit 1
+    ;;
+esac
+
 
 info 'Done.'

@@ -85,19 +85,11 @@ settings_pacman(){
     pacman -Syu
 
     info 'Setting up termux.'
-    for i in bin lib
-    do
-      if [[ ! -d /data/data/com.termux/files/$i ]]; then
-        ln -s $PREFIX/$i /data/data/com.termux/files/$i
-      fi
-    done
-    chroot=$PREFIX/bin/termux-chroot
-    if [[ -z "`grep 'ARGS="$ARGS -b /sys:/sys"' $chroot`" ]]; then
-      sed -i '35a\ARGS="$ARGS -b /sys:/sys"' $chroot
-    fi
-    if [[ -z "`grep 'ARGS="$ARGS --link2symlink"' $chroot`" ]]; then
-      sed -i '35a\ARGS="$ARGS --link2symlink"' $chroot
-    fi
+    bin=$PREFIX/bin
+    rm $bin/termux-chroot
+    wget -P $bin --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/bin/termux-chroot
+    chmod +x $bin/termux-chroot
+    
     etc=$PREFIX/etc
     rm $etc/profile
     wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/usr/etc/profile
@@ -116,10 +108,6 @@ settings_pacman(){
 settings2_pacman(){
   if [[ "$type" == "arch" ]]; then
     info 'Start the second part of the setup.'
-    if [[ ! -d /bin || ! -d /lib ]]; then
-      error 'The /bin and /lib directory is not available.'
-      exit 2
-    fi
     pacman -Syu
     pacman-key --init
     pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always --overwrite "*"  #archlinux-keyring

@@ -89,6 +89,7 @@ settings_pacman(){
     rm $bin/termux-chroot
     wget -P $bin --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/bin/termux-chroot
     chmod +x $bin/termux-chroot
+    sed -i 's/asl sh/sh/' $bin/termux-chroot
     
     etc=$PREFIX/etc
     rm $etc/profile

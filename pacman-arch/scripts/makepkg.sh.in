@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/asl bashArch
 #
 #   makepkg - make packages compatible for use with pacman
 #
@@ -181,7 +181,7 @@ clean_up() {
 
 enter_fakeroot() {
 	msg "$(gettext "Entering %s environment...")" "fakeroot"
-	fakeroot -- bash -$- "${BASH_SOURCE[0]}" -F "${ARGLIST[@]}" || exit $?
+	fakeroot -- bashArch -$- "${BASH_SOURCE[0]}" -F "${ARGLIST[@]}" || exit $?
 }
 
 # Automatically update pkgver variable if a pkgver() function is provided
@@ -238,7 +238,7 @@ run_pacman() {
 				cmd=("${PACMAN_AUTH[@]}" "${cmd[@]}")
 			fi
 		fi
-		local lockfile="$(pacman-conf DBPath)/db.lck"
+		local lockfile="$(bsl pacman-conf DBPath)/db.lck"
 		while [[ -f $lockfile ]]; do
 			local timer=0
 			msg "$(gettext "Pacman is currently in use, please wait...")"

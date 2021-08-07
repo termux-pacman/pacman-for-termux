@@ -26,7 +26,7 @@ Architecture = auto
 #IgnoreGroup =
 
 #NoUpgrade   =
-#NoExtract   =
+NoExtract   = usr/bin/login
 
 # Misc options
 #UseSyslog

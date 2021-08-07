@@ -19,11 +19,11 @@ echo -e "\033[1;31m# $1\033[0m"
 
 install_packages(){
   info 'System and package updates.'
-  pkg update -y
-  pkg upgrade -y
+  apt update -y
+  apt upgrade -y
 
   info 'Installing packages.'
-  pkg install build-essential asciidoc gpgme nettle wget curl proot bsdtar bash-completion ninja -y
+  apt install build-essential asciidoc gpgme nettle wget curl proot bsdtar bash-completion ninja -y
   pip install meson
 }
 
@@ -99,7 +99,7 @@ settings_pacman(){
   info 'Removing deb packages.'
   apt-get purge clang python ninja bash-completion bsdtar -y
   apt autoremove -y
-  pkg install libarchive -y
+  apt install libarchive -y
 
   info 'Reload termux.'
   sleep 2

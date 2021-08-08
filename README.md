@@ -18,7 +18,7 @@ pacman -Udd *package_name*
 
 ## Commands for installing pacman.
 ```bash
-pkg update -y && pkg upgrade -y
+pkg update -y
 pkg install git -y
 git clone https://github.com/Maxython/pacman-for-termux
 cd pacman-for-termux

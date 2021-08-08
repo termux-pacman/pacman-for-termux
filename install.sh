@@ -86,9 +86,12 @@ settings_pacman(){
 
     info 'Setting up termux.'
     bin=$PREFIX/bin
-    rm $bin/termux-chroot
-    wget -P $bin --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/bin/termux-chroot
-    chmod +x $bin/termux-chroot
+    for i in termux-chroot login
+    do
+      rm $bin/$i
+      wget -P $bin --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/bin/$i
+      chmod +x $bin/$i
+    done
     sed -i 's/asl sh/sh/' $bin/termux-chroot
     
     etc=$PREFIX/etc

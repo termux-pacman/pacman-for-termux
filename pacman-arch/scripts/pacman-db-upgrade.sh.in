@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash -e
+#!/data/data/com.termux/files/usr/bin/asl bash -e
 #
 #   pacman-db-upgrade - upgrade the local pacman db to a newer format
 #

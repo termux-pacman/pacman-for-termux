@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/asl bashArch
+#!/data/data/com.termux/files/usr/bin/asl bash
 #
 #   makepkg - make packages compatible for use with pacman
 #

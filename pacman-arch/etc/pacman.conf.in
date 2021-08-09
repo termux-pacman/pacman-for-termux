@@ -22,7 +22,7 @@ HoldPkg     = pacman glibc
 Architecture = auto
 
 # Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
-#is_itIgnorePkg   = pacman bash bzip2 curl glibc gpgme libarchive libgpg-error libnghttp2 libssh2 libxml2 ncurses openssl xz zlib
+#is_itIgnorePkg   = pacman bash bzip2 curl glibc gpgme libarchive libgpg-error libnghttp2 libssh2 libxml2 ncurses openssl xz zlib talloc
 #IgnoreGroup =
 
 #NoUpgrade   =

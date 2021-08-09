@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bsl bash
+#!/data/data/com.termux/files/usr/bin/asl bash
 set -eu
 
 USER_AGENT='Termux-PKG/1.0 mirror-checker (termux-tools 0.133) Termux (com.termux; install-prefix:/data/data/com.termux/files/usr)'

@@ -36,5 +36,5 @@ struct str_pac list_pack = {
 "openssl",
 "xz",
 "zlib",
-"fakeroot"
+"talloc"
 };

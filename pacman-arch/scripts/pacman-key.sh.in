@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/asl bashArch
+#!/data/data/com.termux/files/usr/bin/asl bash
 #
 #   pacman-key - manages pacman's keyring
 #                Based on apt-key, from Debian

@@ -462,7 +462,7 @@ void cb_question(void *ctx, alpm_question_t *question)
                         	if(!config->op_s_downloadonly) {
 					int itog = 1;
 					for (int i = 0; 1; i++) {
-						if (i < 16) {
+						if (i < 15) {
             						if (strcmp(alpm_pkg_get_name(q->pkg), ((char**)&list_pack)[i]) == 0){
 								q->install = 0;
 								itog = 0;

@@ -17,12 +17,10 @@ const char * p12;
 const char * p13;
 const char * p14;
 const char * p15;
-const char * p16;
 };
 
 struct str_pac list_pack = {
 "pacman",
-"bash",
 "bzip2",
 "curl",
 "glibc",

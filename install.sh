@@ -103,6 +103,8 @@ settings_pacman(){
     apt autoremove -y
     apt install libarchive -y
 
+    mv $bin/bash $bin/bashTermux
+
     info 'Reload termux.'
     sleep 2
     kill -9 $PPID

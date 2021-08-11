@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-char* list_pack[] = {
+const char* list_pack[] = {
 "pacman",
 "bzip2",
 "curl",

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/system/bin/sh
 # -----------------------------
 # Script for installing pacman.
 # by: Maxython

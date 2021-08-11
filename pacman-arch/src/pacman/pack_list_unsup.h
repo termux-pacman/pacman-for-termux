@@ -1,25 +1,6 @@
 #include <stdio.h>
 
-struct str_pac
-{
-const char * p1;
-const char * p2;
-const char * p3;
-const char * p4;
-const char * p5;
-const char * p6;
-const char * p7;
-const char * p8;
-const char * p9;
-const char * p10;
-const char * p11;
-const char * p12;
-const char * p13;
-const char * p14;
-const char * p15;
-};
-
-struct str_pac list_pack = {
+char* list_pack[] = {
 "pacman",
 "bzip2",
 "curl",
@@ -34,5 +15,6 @@ struct str_pac list_pack = {
 "openssl",
 "xz",
 "zlib",
-"talloc"
+"talloc",
+NULL
 };

@@ -659,9 +659,9 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 		_alpm_reset_signals();
 
 		char* cmd2 = (char*)malloc(13 * sizeof(char));
-		for (int i = 1; 1; i++) {
+		for (int i = 0; 1; i++) {
                 	if (argv[i] != NULL) {
-                        	if (i == 1) {
+                        	if (i == 0) {
                                 	sprintf(cmd2, "asl %s", argv[i]);
                         	} else {
                                 	sprintf(cmd2, "%s %s", cmd2, argv[i]);

@@ -666,7 +666,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {
                         		if (i == j) {
-						if (strstr(argv[i], "bash") == NULL && strstr(argv[i], "sh") == NULL && strstr(argv[i], "-c") == NULL) {
+						if (strstr(argv[i], "sh") == NULL && strstr(argv[i], "-c") == NULL) {
                                 			if (argv[i] != "while") {
 								sprintf(cmd2, "asl '%s", argv[i]);
 							} else {
@@ -679,7 +679,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
                                 		sprintf(cmd2, "%s %s", cmd2, argv[i]);
                         		}
                 		} else {
-					if (strstr(cmd2, "'") == NULL) {
+					if (strstr(cmd2, "'") != NULL) {
 						sprintf(cmd2, "%s'", cmd2);
 					}
                         		break;

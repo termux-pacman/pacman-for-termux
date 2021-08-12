@@ -662,9 +662,10 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 			execv(cmd, argv);
 		} else {
 			char* cmd2 = (char*)malloc(13 * sizeof(char));
+			sprintf(cmd2, "0");
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {
-                        		if (&cmd2 == 0) {
+                        		if (cmd2 == "0") {
 						if (strstr(argv[i], "sh") == NULL && strstr(argv[i], "-c") == NULL) {
                                 			if (strcmp(argv[i], "while") != 0) {
 								sprintf(cmd2, "asl '%s", argv[i]);

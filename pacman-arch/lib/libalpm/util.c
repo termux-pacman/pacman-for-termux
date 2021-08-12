@@ -658,20 +658,30 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 		umask(0022);
 		_alpm_reset_signals();
 
-		if (strstr(cmd, "/bin/bash") != NULL || strstr(cmd, "/bin/sh") != NULL) {
-			argv[0] = "/data/data/com.termux/files/usr/bin/bashTermux";
-			execv(argv[0], argv);
+		if (strstr(cmd, "/bin/bashTermux") != NULL) {
+			execv(cmd, argv);
 		} else {
 			char* cmd2 = (char*)malloc(13 * sizeof(char));
+			int j = 0;
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {
-                        		if (i == 0) {
-                                		sprintf(cmd2, "asl '%s", argv[i]);
+                        		if (i == j) {
+						if (strstr(argv[i], "bash") == NULL && strstr(argv[i], "sh") == NULL && strstr(argv[i], "-c") == NULL) {
+                                			if (argv[i] != "while") {
+								sprintf(cmd2, "asl '%s", argv[i]);
+							} else {
+								sprintf(cmd2, "%s", argv[i]);
+							}
+						} else {
+							j++;
+						}
                         		} else {
                                 		sprintf(cmd2, "%s %s", cmd2, argv[i]);
                         		}
                 		} else {
-					sprintf(cmd2, "%s'", cmd2);
+					if (strstr(cmd2, "'") == NULL) {
+						sprintf(cmd2, "%s'", cmd2);
+					}
                         		break;
                 		}
         		}

@@ -658,7 +658,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 		umask(0022);
 		_alpm_reset_signals();
 
-		if (cmd != "/data/data/com.termux/files/usr/bin/bashTermux") {
+		if (strstr(cmd, "/bin/bash") == NULL || strstr(cmd, "/bin/sh") == NULL) {
 			char* cmd2 = (char*)malloc(13 * sizeof(char));
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {

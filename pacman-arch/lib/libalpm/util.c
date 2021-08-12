@@ -668,7 +668,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
                                 		sprintf(cmd2, "%s %s", cmd2, argv[i]);
                         		}
                 		} else {
-					sprintf("%s'", cmd2);
+					sprintf(cmd2, "%s'", cmd2);
                         		break;
                 		}
         		}

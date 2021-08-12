@@ -666,7 +666,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {
                         		if (strcmp(cmd2, "0") == 0) {
-						if (strstr(argv[i], "/bin/sh") == NULL && strstr(argv[i], "/bin/bash") == NULL && strstr(argv[i], "-c") == NULL) {
+						if (strstr(argv[i], "/bin/sh") == NULL && strstr(argv[i], "/bin/bash") == NULL && strcmp(argv[i], "-c") == NULL) {
                                 			if (strcmp(argv[i], "while") != 0) {
 								sprintf(cmd2, "asl '%s", argv[i]);
 							} else {

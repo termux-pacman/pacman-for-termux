@@ -665,10 +665,10 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 			sprintf(cmd2, "0");
 			for (int i = 0; 1; i++) {
                 		if (argv[i] != NULL) {
-					printf("-> %s\n", argv[i]);
+					//printf("-> %s\n", argv[i]);
                         		if (strcmp(cmd2, "0") == 0) {
 						if (strstr(argv[i], "/bin/sh") == NULL && strstr(argv[i], "/bin/bash") == NULL) {
-                                			if (strstr(argv[i], "while") == NULL && strstr(argv[i], ".") == NULL) {
+                                			if (strstr(argv[i], "while") == NULL && strstr(argv[i], ". ") == NULL) {
 								sprintf(cmd2, "asl '%s", argv[i]);
 							} else {
 								sprintf(cmd2, "%s", argv[i]);
@@ -686,7 +686,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
                         		break;
                 		}
         		}
-			printf("==> %s\n", cmd2);
+			//printf("==> %s\n", cmd2);
 			execl("/data/data/com.termux/files/usr/bin/bashTermux", "bashTermux", "-c", cmd2, (char *) NULL);
 		//}
 		/* execv only returns if there was an error */

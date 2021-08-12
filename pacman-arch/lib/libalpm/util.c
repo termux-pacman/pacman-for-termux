@@ -668,7 +668,7 @@ int _alpm_run_chroot(alpm_handle_t *handle, const char *cmd, char *const argv[],
 					printf("-> %s\n", argv[i]);
                         		if (strcmp(cmd2, "0") == 0) {
 						if (strstr(argv[i], "/bin/sh") == NULL && strstr(argv[i], "/bin/bash") == NULL) {
-                                			if (strstr(argv[i], "while") != 0) {
+                                			if (strstr(argv[i], "while") == NULL) {
 								sprintf(cmd2, "asl '%s", argv[i]);
 							} else {
 								sprintf(cmd2, "%s", argv[i]);

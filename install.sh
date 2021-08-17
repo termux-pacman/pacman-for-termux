@@ -104,6 +104,8 @@ settings_pacman(){
     apt install libarchive -y
 
     mv $bin/bash $bin/bashTermux
+    
+    [[ -f ~/.termux/shell ]] && rm ~/.termux/shell
 
     info 'Reload termux.'
     sleep 2

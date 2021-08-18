@@ -39,14 +39,6 @@ show_help() {
 	exit 1
 }
 
-run_pac() {
-	if [[ -n "`echo $LIBRARY_PATH | grep conlib`" ]]; then
-		bsl pacman "$@"
-	else
-		pacman "$@"
-	fi
-}
-
 if [ $# = 0 ]; then
 	show_help
 fi
@@ -55,16 +47,16 @@ CMD="$1"
 shift 1
 
 case "$CMD" in
-	f*) run_pac -Ql "$@";;
+	f*) pacman -Ql "$@";;
 	h*) show_help;;
-	sh*|inf*) run_pac -Qi "$@";;
-	add|i*) run_pac -Sy "$@" --needed;;
-	cl*) run_pac -Sc --noconfirm;;
-	l*) run_pac -Q "$@";;
-	rei*) run_pac -S "$@";;
-	se*-f*) run_pac -Fy "$@";;
-	se*) run_pac -Sys "$@";;
-	un*|rem*|rm|del*) run_pac -Rcns "$@";;
-	up*) run_pac -Syyu;;
+	sh*|inf*) pacman -Qi "$@";;
+	add|i*) pacman -Sy "$@" --needed;;
+	cl*) pacman -Sc --noconfirm;;
+	l*) pacman -Q "$@";;
+	rei*) pacman -S "$@";;
+	se*-f*) pacman -Fy "$@";;
+	se*) pacman -Sys "$@";;
+	un*|rem*|rm|del*) pacman -Rcns "$@";;
+	up*) pacman -Syyu;;
 	*) echo "Unknown command: '$CMD' (run 'pkg help' for usage information)"; exit 1;;
 esac

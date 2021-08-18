@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/asl bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 #   makepkg - make packages compatible for use with pacman
 #
@@ -238,7 +238,7 @@ run_pacman() {
 				cmd=("${PACMAN_AUTH[@]}" "${cmd[@]}")
 			fi
 		fi
-		local lockfile="$(bsl pacman-conf DBPath)/db.lck"
+		local lockfile="$(pacman-conf DBPath)/db.lck"
 		while [[ -f $lockfile ]]; do
 			local timer=0
 			msg "$(gettext "Pacman is currently in use, please wait...")"
@@ -248,7 +248,7 @@ run_pacman() {
 			done
 		done
 	fi
-	bsl "${cmd[@]}"
+	"${cmd[@]}"
 }
 
 check_deps() {

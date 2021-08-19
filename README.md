@@ -6,8 +6,6 @@ At this point, pacman is not fully configured for termux, so there may be bugs.
 
 ## A warning:
 #### pacman-arch
-Do not install or update the original conflicting packages ([list](https://github.com/Maxython/pacman-for-termux/wiki/Package-List)), as there is a chance to break the system. These customized packages are located [here](https://github.com/Maxython/arch-packages-for-termux) and are updated as well.
-
 To install packages without dependencies, use the following command: `pacman -Sdd name_package`
 #### pacman-termux
 There are currently no compiled termux packages in pacman format, but you can make full use of `makepkg`.

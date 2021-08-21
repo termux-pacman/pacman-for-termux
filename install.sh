@@ -96,7 +96,7 @@ settings_pacman(){
     
     etc=$PREFIX/etc
     rm $etc/profile
-    wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/profile/usr/etc/profile
+    wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/etc/profile
 
     info 'Removing deb packages.'
     apt-get purge clang python ninja bash-completion bsdtar -y

@@ -24,9 +24,7 @@ cd pacman-for-termux
 ```
 Restart termux after installation.
 
-<!--
 After these commands, restart termux and run the following command.
 ```bash
 ./pacman-for-termux/install.sh set2
 ```
--->

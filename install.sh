@@ -128,6 +128,8 @@ set -e
 
 clear
 
+[[ ! -d $HOME ]] && export HOME=/data/data/com.termux/files/home
+
 selec=$HOME/pacman-for-termux/selec.conf
 if [[ ! -f $selec ]]; then
   info "Select the pacman view, they are configured for a specific environment and for a specific type of command installation.  The script will also set up the environment for a particular kind of pacman."

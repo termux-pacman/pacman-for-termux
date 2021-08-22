@@ -2,7 +2,8 @@ wrapped_scripts = [
   'makepkg.sh.in',
   'pacman-db-upgrade.sh.in',
   'pacman-key.sh.in',
-  'repo-add.sh.in'
+  'repo-add.sh.in',
+  'pkg.sh.in'
 ]
 
 scripts = [
@@ -76,7 +77,7 @@ custom_target(
   install : true,
   install_dir : BASHCOMPDIR)
 
-foreach symlink : ['pacman-key', 'makepkg']
+foreach symlink : ['pacman-key', 'makepkg', 'pkg']
   meson.add_install_script(MESON_MAKE_SYMLINK,
                            'pacman',
                            join_paths(BASHCOMPDIR, symlink))

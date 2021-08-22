@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 #
 #   util.sh - utility functions for pkgbuild linting.
 #

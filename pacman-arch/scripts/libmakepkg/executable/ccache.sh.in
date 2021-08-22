@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/bash
 #
 #   ccache.sh - Confirm presence of ccache binary
 #

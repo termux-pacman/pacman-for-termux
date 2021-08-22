@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/bash
 #
 #   buildflags.sh - Clear user-specified buildflags if requested
 #

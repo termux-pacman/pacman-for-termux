@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/bash
 #
 #   lto.sh - Specify flags for building a package with link-time
 #            optimisation

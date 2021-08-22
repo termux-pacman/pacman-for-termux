@@ -69,21 +69,6 @@ install_pacman(){
 
 settings_pacman(){
   if [[ "$type" == "arch" ]]; then
-    info 'Pacman settings.'
-    wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-    pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
-    rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-    conf=$PREFIX/etc/pacman.conf
-    sed -i 's/#this//' $conf
-    sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
-    un="`uname -m`"
-    if [[ $un == "armv7l" ]]; then
-      sed -i 's/Architecture = auto/Architecture = armv7h/' $conf
-    fi
-
-    info 'Run pacman.'
-    pacman -Syu
-
     info 'Setting up termux.'
     bin=$PREFIX/bin
     for i in termux-chroot login
@@ -115,11 +100,25 @@ settings_pacman(){
 
 settings2_pacman(){
   if [[ "$type" == "arch" ]]; then
-    info 'Start the second part of the setup.'
+    if [ `id -u` != 0 ]; then
+      error "This stage of the installation should be done with a root user."
+      exit 1
+    fi
+
+    info 'Pacman settings.'
+    wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+    pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
+    rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+    conf=$PREFIX/etc/pacman.conf
+    sed -i 's/#this//' $conf
+    sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
+    un="`uname -m`"
+    if [[ $un == "armv7l" ]]; then
+      sed -i 's/Architecture = auto/Architecture = armv7h/' $conf
+    fi
+
+    info 'Run pacman.'
     pacman -Syu
-    pacman-key --init
-    pacman -S filesystem archlinuxarm-keyring --noconfirm --color=always --overwrite "*"  #archlinux-keyring
-    pacman-key --populate
   else
     info "You have pacman termux type, nothing to configure."
   fi

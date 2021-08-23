@@ -5,13 +5,13 @@ USER_AGENT='Termux-PKG/1.0 mirror-checker (termux-tools 0.133) Termux (com.termu
 
 show_help() {
 	local cache_size
-	cache_size=$(du -sh /data/data/com.termux/files/usr/var/cache/bsl pacmanman/pkg/ 2>/dev/null | cut -f1)
+	cache_size=$(du -sh /data/data/com.termux/files/usr/var/cache/pacman/pkg/ 2>/dev/null | cut -f1)
 
 	echo 'Usage: pkg command [arguments]'
 	echo
 	echo 'A tool for managing bsl pacmankages. Commands:'
 	echo
-	echo '  clean                - Remove all bsl pacmankages from .deb package cache.'
+	echo '  clean                - Remove all bsl pacmankages from .pkg.tar.xz package cache.'
 	[ -n "$cache_size" ] && echo "                         Using $cache_size now."
 	echo
 	echo '  files <bsl pacmankages>     - Show all files installed by packages.'

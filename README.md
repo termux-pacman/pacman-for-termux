@@ -5,8 +5,6 @@ Configured pacman to install packages on termux. There are two kinds of pacman, 
 At this point, pacman is not fully configured for termux, so there may be bugs.  
 
 ## A warning:
-#### pacman-arch
-To install packages without dependencies, use the following command: `pacman -Sdd name_package`
 #### pacman-termux
 There are currently no compiled termux packages in pacman format, but you can make full use of `makepkg`.
 ```bash

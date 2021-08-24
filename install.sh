@@ -6,15 +6,27 @@
 # -----------------------------
 
 info(){
-echo -e "\033[1;36m\n# $1\033[0m"
+  echo -e "\033[1;36m\n# $1\033[0m"
 }
 
 commet(){
-echo -e "\033[0;32m# $1\033[0m"
+  echo -e "\033[0;32m# $1\033[0m"
 }
 
 error(){
-echo -e "\033[1;31m# $1\033[0m"
+  echo -e "\033[1;31m# $1\033[0m"
+}
+
+get_arch() {
+  arch=`uname -m`
+
+  if [[ $arch = "armv7" || $arch = "armv7l" ]]; then
+    echo "armv7h"
+  elif [ $arch != "aarch64" ]; then
+    echo "arm"
+  else
+    echo "aarch64"
+  fi
 }
 
 install_packages(){
@@ -110,15 +122,22 @@ settings2_pacman(){
     pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
     rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
     conf=$PREFIX/etc/pacman.conf
+    arch=`get_arch`
     sed -i 's/#this//' $conf
     sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
-    un="`uname -m`"
-    if [[ $un == "armv7l" ]]; then
-      sed -i 's/Architecture = auto/Architecture = armv7h/' $conf
-    fi
+    sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
 
     info 'Run pacman.'
     pacman -Syu
+
+    info 'The first stage of installing packages.'
+    wget https://github.com/Maxython/arch-packages-for-termux/releases/download/packages-v2021.08.19/packages-${arch}.tar.xz
+    tar xJf packages-${arch}.tar.xz
+    cd packages
+    pacman -U * --noconfirm --overwrite "*"
+
+    info 'The second stage of installing packages.'
+    pacman -S base-devel base --needed --noconfirm --overwrite "*"
   else
     info "You have pacman termux type, nothing to configure."
   fi

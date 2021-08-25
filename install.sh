@@ -35,7 +35,13 @@ install_packages(){
   apt upgrade -y
 
   info 'Installing packages.'
-  apt install build-essential asciidoc gpgme nettle wget curl proot bsdtar bash-completion ninja -y
+  apt install build-essential asciidoc gpgme nettle wget curl proot bsdtar bash-completion ninja tsu -y
+  dir_root=$PREFIX/bin/root
+  if [ ! -d $dir_root ]; then
+    mkdir $dir_root
+    mv $PREFIX/bin/tsu $dir_root
+    ln -s $dir_root/tsu $dir_root/sudo
+  fi
   pip install meson
 }
 

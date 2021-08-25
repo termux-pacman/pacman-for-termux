@@ -137,6 +137,8 @@ settings2_pacman(){
 
     /system/bin/sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
 
+    pacman -Syy
+
     info 'The second stage of installing packages.'
     pacman -S base-devel base --needed --noconfirm --overwrite "*"
   else

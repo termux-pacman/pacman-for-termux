@@ -124,7 +124,6 @@ settings2_pacman(){
     conf=$PREFIX/etc/pacman.conf
     arch=`get_arch`
     sed -i 's/#this//' $conf
-    sed -i 's+RootDir     = /data/data/com.termux/files/usr/+RootDir     = /data/data/com.termux/files/+' $conf
     sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
 
     info 'Run pacman.'
@@ -135,6 +134,8 @@ settings2_pacman(){
     tar xJf packages-${arch}.tar.xz
     cd packages
     pacman -U * --noconfirm --overwrite "*"
+
+    /system/bin/sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
 
     info 'The second stage of installing packages.'
     pacman -S base-devel base --needed --noconfirm --overwrite "*"

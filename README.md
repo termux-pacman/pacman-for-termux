@@ -20,8 +20,6 @@ git clone https://github.com/Maxython/pacman-for-termux
 cd pacman-for-termux
 ./install.sh
 ```
-Restart termux after installation.
-
 After these commands, restart termux and run the following command.
 ```bash
 ./pacman-for-termux/install.sh set2

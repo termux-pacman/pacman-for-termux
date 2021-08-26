@@ -144,6 +144,54 @@ settings2_pacman(){
     rm -fr packages*
     pacman -Syy
 
+    set +e
+    if [ -f /etc/locale.conf ]; then
+      info 'Setting locale.'
+      commet 'To continue, you must enter the ISO 639-1 language code (eg: en).'
+      while :
+      do
+        read -p "Search: " search
+        list=$(/system/bin/grep "#${search}" /etc/locale.gen | /system/bin/grep UTF-8 | sed 's/#//g')
+        if [[ -n $list ]]; then
+          j=1
+          for i in $list
+          do
+            if [ $i != "UTF-8" ]; then
+              echo "$j) $i"
+              locales="$locales $i"
+              j=$(( j+1 ))
+            fi
+          done
+          list=($locales)
+          commet 'Select the language of your region.'
+          commet "Enter 'repeat' to repeat the search."
+          while :
+          do
+            read -p "choose: " int
+            if [ $int != "repeat" ]; then
+              value=${list[$(( int-1 ))]}
+              if [[ -n $value ]]; then
+                sed -i "s/#$value/$value/" /etc/locale.gen
+                locale-gen
+                echo "LANG=${value}" > /etc/locale.conf
+                export LANG="${value}"
+                end="0"
+                break
+              else
+                error 'Invalid index selected.'
+              fi
+            else
+              break
+            fi
+          done
+          [[ -n $end ]] && break
+        else
+          error 'Language not found.'
+        fi
+      done
+    fi
+    set -e
+
     info 'The second stage of installing packages.'
     pacman -S base-devel base --needed --noconfirm --overwrite "*"
   else

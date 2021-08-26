@@ -173,7 +173,9 @@ settings2_pacman(){
               value=${list[$(( int-1 ))]}
               if [[ -n $value ]]; then
                 /system/bin/sed -i "s/#$value/$value/" /etc/locale.gen
+                export PATH="/system/bin:/usr/bin"
                 locale-gen
+                export PATH="/usr/bin"
                 echo "LANG=${value}" > /etc/locale.conf
                 end="0"
                 break

@@ -117,26 +117,31 @@ settings2_pacman(){
       exit 1
     fi
 
-    info 'Pacman settings.'
-    wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-    pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
-    rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-    conf=$PREFIX/etc/pacman.conf
     arch=`get_arch`
-    sed -i 's/#this//' $conf
-    sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
 
-    info 'Run pacman.'
-    pacman -Syu
+    set +e
+    pacman -Q pacman-mirrorlist > /dev/null 2>&1
+    if [ $? = "1" ]; then
+      set -e
+      info 'Pacman settings.'
+      wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+      pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
+      rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+      conf=$PREFIX/etc/pacman.conf
+      sed -i 's/#this//' $conf
+      sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
+      pacman -Syu
+    fi
+    set -e
 
     info 'The first stage of installing packages.'
     wget https://github.com/Maxython/arch-packages-for-termux/releases/download/packages-v2021.08.19/packages-${arch}.tar.xz
     tar xJf packages-${arch}.tar.xz
     cd packages
-    pacman -U * --noconfirm --overwrite "*"
-
+    pacman -U * --needed --noconfirm --overwrite "*"
     /system/bin/sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
-
+    cd ..
+    rm -fr packages*
     pacman -Syy
 
     info 'The second stage of installing packages.'

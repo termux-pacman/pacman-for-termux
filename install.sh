@@ -144,9 +144,9 @@ settings2_pacman(){
     rm -fr packages*
     pacman -Syy
 
-    set +e
-    clear
     if [ ! -f /etc/locale.conf ]; then
+      set +e
+      clear
       info 'Setting locale.'
       commet 'To continue, you must enter the ISO 639-1 language code (eg: en).'
       while :
@@ -175,7 +175,6 @@ settings2_pacman(){
                 sed -i "s/#$value/$value/" /etc/locale.gen
                 locale-gen
                 echo "LANG=${value}" > /etc/locale.conf
-                export LANG="${value}"
                 end="0"
                 break
               else
@@ -190,9 +189,10 @@ settings2_pacman(){
           error 'Language not found.'
         fi
       done
+      clear
+      set -e
     fi
-    set -e
-    clear
+    source /etc/locale.conf
 
     info 'The second stage of installing packages.'
     pacman -S base-devel base --needed --noconfirm --overwrite "*"

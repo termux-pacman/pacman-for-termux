@@ -152,7 +152,7 @@ settings2_pacman(){
       while :
       do
         read -p "Search: " search
-        list=$(/system/bin/grep "#${search}" /etc/locale.gen | /system/bin/grep UTF-8 | sed 's/#//g')
+        list=$(/system/bin/grep "#${search}" /etc/locale.gen | /system/bin/grep UTF-8 | /system/bin/sed 's/#//g')
         if [[ -n $list ]]; then
           j=1
           for i in $list
@@ -172,7 +172,7 @@ settings2_pacman(){
             if [ $int != "repeat" ]; then
               value=${list[$(( int-1 ))]}
               if [[ -n $value ]]; then
-                sed -i "s/#$value/$value/" /etc/locale.gen
+                /system/bin/sed -i "s/#$value/$value/" /etc/locale.gen
                 locale-gen
                 echo "LANG=${value}" > /etc/locale.conf
                 end="0"

@@ -1,4 +1,4 @@
-#!/system/bin/sh
+
 # -----------------------------
 # Script for installing pacman.
 # by: Maxython

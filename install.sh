@@ -145,7 +145,8 @@ settings2_pacman(){
     pacman -Syy
 
     set +e
-    if [ -f /etc/locale.conf ]; then
+    clear
+    if [ ! -f /etc/locale.conf ]; then
       info 'Setting locale.'
       commet 'To continue, you must enter the ISO 639-1 language code (eg: en).'
       while :
@@ -191,6 +192,7 @@ settings2_pacman(){
       done
     fi
     set -e
+    clear
 
     info 'The second stage of installing packages.'
     pacman -S base-devel base --needed --noconfirm --overwrite "*"

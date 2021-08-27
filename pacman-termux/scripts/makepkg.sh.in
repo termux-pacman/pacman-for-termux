@@ -1238,7 +1238,7 @@ else
 fi
 
 # set pkgdir to something "sensible" for (not recommended) use during build()
-pkgdir="$pkgdirbase/$pkgbase"
+pkgdir="$pkgdirbase/$pkgbase/$PREFIX"
 
 if (( GENINTEG )); then
 	mkdir -p "$srcdir"

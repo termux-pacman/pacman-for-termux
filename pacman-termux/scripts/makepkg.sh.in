@@ -742,7 +742,7 @@ create_debug_package() {
 		return 0
 	fi
 
-	local pkgdir="$pkgdirbase/$pkgbase-@DEBUGSUFFIX@/data/data/com.termux/files"
+	local pkgdir="$pkgdirbase/$pkgbase-@DEBUGSUFFIX@"
 
 	# check if we have any debug symbols to package
 	if dir_is_empty "$pkgdir/usr/lib/debug"; then
@@ -933,12 +933,11 @@ restore_package_variables() {
 }
 
 run_single_packaging() {
-	local pkgdir="$pkgdirbase/$pkgname/data/data/com.termux/files"
-	mkdir "$pkgdir"
+	local pkgdir="$pkgdirbase/$pkgname"
+	mkdir -p "$terdir"
 	if [[ -n $1 ]] || (( PKGFUNC )); then
 		run_package $1
 	fi
-	local pkgdir="$pkgdirbase/$pkgname"
 	tidy_install
 	lint_package || exit $E_PACKAGE_FAILED
 	create_package
@@ -1239,7 +1238,8 @@ else
 fi
 
 # set pkgdir to something "sensible" for (not recommended) use during build()
-pkgdir="$pkgdirbase/$pkgbase/data/data/com.termux/files"
+pkgdir="$pkgdirbase/$pkgbase"
+terdir="$pkgdir/data/data/com.termux/files"
 
 if (( GENINTEG )); then
 	mkdir -p "$srcdir"

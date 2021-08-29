@@ -1239,7 +1239,13 @@ fi
 
 # set pkgdir to something "sensible" for (not recommended) use during build()
 pkgdir="$pkgdirbase/$pkgbase"
+
+# the second pkgdir but from the termux system directory
 terdir="$pkgdir/data/data/com.termux/files"
+
+# adding home and prefix to compile correctly
+prefix="/data/data/com.termux/files/usr"
+home="/data/data/com.termux/files/home"
 
 if (( GENINTEG )); then
 	mkdir -p "$srcdir"

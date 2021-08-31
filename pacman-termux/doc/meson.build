@@ -101,7 +101,7 @@ foreach page: manpages + sitepages
 endforeach
 
 run_target('html',
-           command : ['/bin/true'],
+           command : ['/data/data/com.termux/files/usr/bin/true'],
            depends : html_targets)
 
 custom_target(

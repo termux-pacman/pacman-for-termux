@@ -953,48 +953,6 @@ run_split_packaging() {
 	pkgname=("${pkgname_backup[@]}")
 }
 
-download() {
-	if [ $# != 3 ]; then
-		error "$(gettext "download(): Invalid arguments - expected \$URL \$DESTINATION \$CHECKSUM")"
-		exit 1
-	fi
-	local URL="$1"
-	local DESTINATION="$2"
-	local CHECKSUM="$3"
-
-	if [ -f "$DESTINATION" ] && [ "$CHECKSUM" != "skip" ]; then
-		# Keep existing file if checksum matches.
-		local EXISTING_CHECKSUM
-		EXISTING_CHECKSUM=$(sha256sum "$DESTINATION" | cut -f 1 -d ' ')
-		if [ "$EXISTING_CHECKSUM" = "$CHECKSUM" ]; then return; fi
-	fi
-
-	local TMPFILE
-	TMPFILE=$(mktemp "$srcdir/download.$pkgname.XXXXXXXXX")
-	msg "$(gettext "Downloading %s")" \
-		"$URL"
-	if curl --fail --retry 20 --retry-connrefused --retry-delay 30 --location --output "$TMPFILE" "$URL"; then
-		local ACTUAL_CHECKSUM
-		ACTUAL_CHECKSUM=$(sha256sum "$TMPFILE" | cut -f 1 -d ' ')
-		if [ "$CHECKSUM" != "skip" ]; then
-			if [ "$CHECKSUM" != "$ACTUAL_CHECKSUM" ]; then
-				error "$(gettext "Wrong checksum for %s:\nExpected: %s\nActual:   %s\n")" \
-					   "$URL" "$CHECKSUM" "$ACTUAL_CHECKSUM"
-				exit 1
-			fi
-		elif [ -z "$CHECKSUM" ]; then
-			warning "$(gettext "No checksum check for %s:\nActual: %s\n")" \
-			       "$URL" "$ACTUAL_CHECKSUM"
-		fi
-		mv "$TMPFILE" "$DESTINATION"
-		return 0
-	fi
-
-	error "$(gettext "Failed to download %s")" \
-		"$URL"
-	return 1
-}
-
 usage() {
 	printf "makepkg (pacman) %s\n" "$makepkg_version"
 	echo

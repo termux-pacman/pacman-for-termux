@@ -29,6 +29,14 @@ get_arch() {
   fi
 }
 
+get_arch_termux() {
+  if [ `uname -m` = "aarch64" ]; then
+    echo "aarch64"
+  else
+    echo "armv7"
+  fi
+}
+
 install_packages(){
   info 'System and package updates.'
   apt update -y
@@ -90,7 +98,7 @@ settings_pacman(){
       chmod +x $bin/$i
     done
     sed -i 's/ARGS="$ARGS -0"/#ARGS="$ARGS -0"/' $bin/termux-chroot
-    
+
     etc=$PREFIX/etc
     rm $etc/profile
     wget -P $etc --inet4-only https://raw.githubusercontent.com/Maxython/arch-packages-for-termux/main/termux-commands/usr/etc/profile
@@ -101,12 +109,15 @@ settings_pacman(){
     apt install libarchive -y
 
     mv $bin/bash $bin/bashTermux
-    
+
     [[ -f ~/.termux/shell ]] && rm ~/.termux/shell
 
     info 'Reload termux.'
     sleep 2
     kill -9 $PPID
+  else
+    arch=`get_arch_termux`
+    sed -i "s/Architecture = auto/Architecture = ${arch}/" $PREFIX/etc/pacman.conf
   fi
 }
 

@@ -33,7 +33,7 @@ get_arch_termux() {
   if [ `uname -m` = "aarch64" ]; then
     echo "aarch64"
   else
-    echo "armv7"
+    echo "arm"
   fi
 }
 

@@ -893,7 +893,7 @@ const char *_alpm_filecache_setup(alpm_handle_t *handle)
 	if((tmpdir = getenv("TMPDIR")) && stat(tmpdir, &buf) && S_ISDIR(buf.st_mode)) {
 		/* TMPDIR was good, we can use it */
 	} else {
-		tmpdir = "/tmp";
+		tmpdir = "/data/data/com.termux/files/usr/tmp";
 	}
 	alpm_option_add_cachedir(handle, tmpdir);
 	cachedir = handle->cachedirs->prev->data;

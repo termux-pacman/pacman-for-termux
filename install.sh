@@ -137,9 +137,9 @@ settings2_pacman(){
     if [ $? = "1" ]; then
       set -e
       info 'Pacman settings.'
-      wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210307-1-any.pkg.tar.xz
-      pacman -U pacman-mirrorlist-20210307-1-any.pkg.tar.xz --noconfirm
-      rm pacman-mirrorlist-20210307-1-any.pkg.tar.xz
+      wget --inet4-only http://mirror.archlinuxarm.org/aarch64/core/pacman-mirrorlist-20210918-1-any.pkg.tar.xz
+      pacman -U pacman-mirrorlist-20210918-1-any.pkg.tar.xz --noconfirm
+      rm pacman-mirrorlist-20210918-1-any.pkg.tar.xz
       conf=$PREFIX/etc/pacman.conf
       sed -i 's/#this//' $conf
       sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf

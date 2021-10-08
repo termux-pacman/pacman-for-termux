@@ -114,10 +114,11 @@ settings_pacman(){
     arch=`get_arch`
   else
     arch=`get_arch_termux`
-    sed -i 's/#this//' $PREFIX/etc/pacman.conf
-    pacman -Syy
   fi
   sed -i "s/Architecture = auto/Architecture = ${arch}/" $PREFIX/etc/pacman.conf
+  if [[ "$type" == "termux" ]]; then
+    pacman -Syy
+  fi
 }
 
 settings2_pacman(){

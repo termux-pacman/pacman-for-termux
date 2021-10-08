@@ -109,18 +109,15 @@ settings_pacman(){
     apt autoremove -y
     apt install libarchive -y
 
-    mv $bin/bash $bin/bashTermux
-
     [[ -f ~/.termux/shell ]] && rm ~/.termux/shell
 
-    info 'Reload termux.'
-    sleep 2
-    kill -9 $PPID
+    arch=`get_arch`
   else
     arch=`get_arch_termux`
-    sed -i "s/Architecture = auto/Architecture = ${arch}/" $PREFIX/etc/pacman.conf
+    sed -i 's/#this//' $PREFIX/etc/pacman.conf
     pacman -Syy
   fi
+  sed -i "s/Architecture = auto/Architecture = ${arch}/" $PREFIX/etc/pacman.conf
 }
 
 settings2_pacman(){
@@ -142,7 +139,6 @@ settings2_pacman(){
       rm pacman-mirrorlist-20210918-1-any.pkg.tar.xz
       conf=$PREFIX/etc/pacman.conf
       sed -i 's/#this//' $conf
-      sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
       pacman -Syu
     fi
     set -e
@@ -152,7 +148,6 @@ settings2_pacman(){
     tar xJf packages-${arch}.tar.xz
     cd packages
     pacman -U * --needed --noconfirm --overwrite "*"
-    /system/bin/sed -i "s/Architecture = auto/Architecture = ${arch}/" $conf
     cd ..
     rm -fr packages*
     pacman -Syy
@@ -254,6 +249,9 @@ case $1 in
     install_packages
     install_pacman $2
     settings_pacman
+    info 'Reload termux.'
+    sleep 2
+    kill -9 $PPI
     ;;
 
   "help")

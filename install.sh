@@ -118,6 +118,9 @@ settings_pacman(){
     pacman -Syy
   fi
   sed -i "s/Architecture = auto/Architecture = ${arch}/" $PREFIX/etc/pacman.conf
+  info 'Reload termux.'
+  sleep 2
+  kill -9 $PPI
 }
 
 settings2_pacman(){
@@ -249,9 +252,6 @@ case $1 in
     install_packages
     install_pacman $2
     settings_pacman
-    info 'Reload termux.'
-    sleep 2
-    kill -9 $PPI
     ;;
 
   "help")

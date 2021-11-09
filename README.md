@@ -20,7 +20,13 @@ makepkg -d
 pacman -Udd *package_file_name*
 ```
 
-## Commands for installing pacman.
+## Installing pacman via pkg.
+```bash
+pkg upd -y
+pkg ins pacman -y
+```
+
+## Compiling and installing pacman.
 ```bash
 pkg update -y
 pkg install git -y

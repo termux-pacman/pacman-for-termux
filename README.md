@@ -3,7 +3,7 @@
 ![repo size](https://img.shields.io/github/repo-size/Maxython/pacman-for-termux)
 ![tag](https://img.shields.io/github/v/tag/Maxython/pacman-for-termux)
 
-Configured pacman to install packages on termux. There are two kinds of pacman, **arch** and **termux**.  The main difference between the two is the support for installing packages (**pacman-arch** installs arch packages and **pacman-termux** installs termux packages). All termux services for pacman are located [here](https://github.com/Maxython/termux-packages-in-pacman-format).
+Configured pacman to install packages on termux. There are two kinds of pacman, **arch** and **termux**.  The main difference between the two is the support for installing packages (**pacman-arch** installs arch packages and **pacman-termux** installs termux packages). All termux services for pacman are located [here](https://github.com/Maxython/pacman-update-db).
 
 ## A warning:
 #### pacman-termux with old services

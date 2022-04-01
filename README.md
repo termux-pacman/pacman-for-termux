@@ -6,7 +6,7 @@
 Configured pacman to install packages on termux. There are two kinds of pacman, **arch** and **termux**.  The main difference between the two is the support for installing packages (**pacman-arch** installs arch packages and **pacman-termux** installs termux packages). All termux services for pacman are located [here](https://github.com/Maxython/pacman-update-db).
 
 ## A warning:
-Comparison with the new and with the old, here the problem of dependencies is solved, but not all packages are currently on the new service.  If you notice a package is missing in a new service, please post an issue [here](https://github.com/Maxython/termux-packages-pacman).
+Not all packages are currently on the service.  If you notice a package is missing in a service, please post an issue [here](https://github.com/Maxython/termux-packages-pacman).
 
 ## Installing pacman via pkg.
 ```bash

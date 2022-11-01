@@ -70,10 +70,13 @@ LocalFileSigLevel = Optional
 # after the header, and they will be used before the default mirrors.
 
 [main]
-Server = https://s3.amazonaws.com/termux-main.pacman/$arch
+Server = https://s3.amazonaws.com/termux-pacman.us/main/$arch
 
 [x11]
-Server = https://s3.amazonaws.com/termux-x11.pacman/$arch
+Server = https://s3.amazonaws.com/termux-pacman.us/x11/$arch
 
 [root]
-Server = https://s3.amazonaws.com/termux-root.pacman/$arch
+Server = https://s3.amazonaws.com/termux-pacman.us/root/$arch
+
+[tur]
+Server = https://s3.amazonaws.com/termux-pacman.us/tur/$arch

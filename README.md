@@ -1,31 +1,14 @@
-# pacman-for-termux
+# Information
+**pacman-for-termux** is a project that allows you to use the pacman package manager and its tools (makepkg and repo-add) in termux. This repository used to be the beginning of pacman support development for termux, but now it plays the role of informing the user and the main work with pacman has been moved to the [termux/termux-packages](https://github.com/termux/termux-packages) repository.
 
-![repo size](https://img.shields.io/github/repo-size/Maxython/pacman-for-termux)
-![tag](https://img.shields.io/github/v/tag/Maxython/pacman-for-termux)
-
-Configured pacman to install packages on termux. There are two kinds of pacman, **arch** and **termux**.  The main difference between the two is the support for installing packages (**pacman-arch** installs arch packages and **pacman-termux** installs termux packages).  
-
-Compiling packages and maintaining the pacman package repository service is provided by the [termux-pacman](https://github.com/termux-pacman) organization.
-
-### Installing pacman via pkg (recommended way).
+# Installing pacman
+Please note that in order to use pacman fully, you need to follow certain steps for this (how to do it is written [here](https://wiki.termux.com/wiki/Switching_package_manager)). But if you just want to get pacman with the tools, you can run the following command (although doing a **full install** of pacmam is also recommended here).
 ```bash
 pkg upd -y
 pkg ins pacman -y
 ```
 
-### Compiling and installing pacman (not a recommended way as the source code in this repository is old).
-```bash
-pkg update -y
-pkg install git -y
-git clone https://github.com/Maxython/pacman-for-termux
-cd pacman-for-termux
-./install.sh
-```
-After these commands, restart termux and run the following command.
-```bash
-./pacman-for-termux/install.sh set2
-```
-
-
-## Note:
-If you have installed pacman via apt, then you cannot use it fully, as there is a risk that you will break your system. If you want to use pacman as your default package manager (that is fully), then you will need to take other steps. How to do it is described [here](https://wiki.termux.com/wiki/Switching_package_manager).
+# Useful links
+ - [AUR in termux](https://wiki.termux.com/wiki/AUR)
+ - [Official site org. Termux Pacman](https://termux-pacman.dev)
+ - [Official service for pacman](https://service.termux-pacman.dev)

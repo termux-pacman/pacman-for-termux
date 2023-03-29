@@ -11,4 +11,4 @@ pkg ins pacman -y
 # Useful links
  - [AUR in termux](https://wiki.termux.com/wiki/AUR)
  - [Official site org. Termux Pacman](https://termux-pacman.dev)
- - [Official service for pacman](https://service.termux-pacman.dev)
+<!-- - [Official service for pacman](https://service.termux-pacman.dev) -->

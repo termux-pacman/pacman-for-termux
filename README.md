@@ -4,7 +4,7 @@
 <a href="https://asciinema.org/a/PYC7ObwHcXiCtMHceA4pp5XYv?autoplay=1" target="_blank"><img src="https://asciinema.org/a/PYC7ObwHcXiCtMHceA4pp5XYv.svg" width=750/></a>
 
 # Installing pacman
-Please note that in order to use pacman fully, you need to follow certain steps for this (how to do it is written [here](https://wiki.termux.com/wiki/Switching_package_manager)). But if you just want to get pacman with the tools, you can run the following command (although doing a **full install** of pacmam is also recommended here).
+Please note that in order to use pacman fully, you need to follow certain steps for this (how to do it is written [here](https://wiki.termux.com/wiki/Switching_package_manager)). But if you just want to get pacman with the tools, you can run the following command (although doing a **full install** of pacman is also recommended here).
 ```bash
 pkg upd -y
 pkg ins pacman -y
